@@ -17,8 +17,11 @@ def run(*args: str, cwd: Path | None = None) -> str:
 
 
 def validate_package(name: str) -> None:
-    if not name or not name.replace("-", "").replace("_", "").isalnum() or name.startswith("-"):
-        raise ValueError("package name must contain only letters, numbers, '_' or '-' and cannot start with '-'")
+    # ponytail: package names are validated against a strict allow-list so a
+    # dispatched value cannot carry shell metacharacters past the run shell
+    # (already hardened via env: binding in import-rawhide-package.yml).
+    if not name or not all(c in "abcdefghijklmnopqrstuvwxyz0123456789+-." for c in name) or name.startswith("-"):
+        raise ValueError("package name must contain only [a-z0-9+.-] and cannot start with '-'")
 
 
 def validate_branch(branch: str) -> None:
