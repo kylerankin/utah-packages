@@ -39,11 +39,11 @@ jobs:
       - name: Open reviewable update
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
-          branch: import/rawhide-${{ env.PACKAGE }}
+          branch: import/rawhide-${{ inputs.package }}
           delete-branch: true
-          title: 'import: Rawhide ${{ env.PACKAGE }}'
-          commit-message: 'import: Rawhide ${{ env.PACKAGE }}'
+          title: 'import: Rawhide ${{ inputs.package }}'
+          commit-message: 'import: Rawhide ${{ inputs.package }}'
           body: |
             Imports Fedora dist-git at the exact commit recorded in
-            `packages/${{ env.PACKAGE }}/.hummingbird-upstream.json`.
+            `packages/${{ inputs.package }}/.hummingbird-upstream.json`.
             Review and patch the snapshot here before enabling it in a rebuild set.
