@@ -42,31 +42,34 @@ Package builds, generated-source reproduction, reproducibility probes, and
 environment-sensitive validation run in GitHub Actions, in a container the
 workflow starts with `docker run`.
 
-**Which container is not what `AGENTS.md` says it is, and this is a live
-contradiction rather than a nuance.** `AGENTS.md` requires the digest-pinned
-`quay.io/packit/packit` image, and forbids replacing that digest with a
-mutable tag. What actually builds every RPM is:
+**The container question is now settled, and here is what actually builds
+every RPM.** `AGENTS.md` requires the digest-pinned `quay.io/packit/packit`
+image, and forbids replacing that digest with a mutable tag. Every build lane
+honours that now:
 
 | workflow | container | pinned? |
 | --- | --- | --- |
-| `build-stage.yml` — the binary lane | `quay.io/fedora/fedora:44` | no, a mutable tag |
-| `rebuild-rpms.yml` — `preflight`, `precedence` | `quay.io/fedora/fedora:44` | no, a mutable tag |
-| `packit-srpm-pilot.yml` — verification only, feeds nothing | `quay.io/packit/packit@sha256:8a178425…` | yes |
-| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os:latest` | no, a mutable tag |
+| `build-stage.yml` — the binary lane | `quay.io/packit/packit@sha256:fb449261…` | yes |
+| `rebuild-rpms.yml` — `preflight`, `precedence` | `quay.io/packit/packit@sha256:fb449261…` | yes |
+| `packit-srpm-pilot.yml` — verification only, feeds nothing | `quay.io/packit/packit@sha256:fb449261…` | yes |
+| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os@sha256:c5539f9…` | yes |
 
-So the only workflow honouring the rule is the one that produces nothing, and
-the rule's own prohibition — a mutable tag — describes every real build.
+The pin `AGENTS.md` forbids swapping is now uniform across every lane. The
+build images pin to `quay.io/packit/packit:latest` at
+`sha256:fb449261…` (2026-09-16); the upstream Packit image is rebuilt daily, so
+it is re-pinned when upstream republishes. This closes the 'container' half of
+[#43](https://github.com/projectbluefin/utah-packages/issues/43).
 
 The rule is not arbitrary and is not a leftover. `docs/superpowers/specs/`
 carries an approved design in which Packit drives Mock, and the Packit image
 was pinned precisely because it supplies `packit`, `mock` and `createrepo_c`
-in one place. What the table shows is therefore an **unfinished
-implementation**, not a wrong rule: the binary lane never got past hand-rolled
-`rpmbuild` in a Fedora image. The mutable tag, the installed-but-unused mock,
-and the hand-simulated build root are all the same gap seen from different
-angles.
+in one place. What the lanes still show is therefore an **unfinished
+implementation**, not a wrong rule: the binary lane still builds with
+hand-rolled `rpmbuild` inside the container rather than Mock. The
+installed-but-unused mock and the hand-simulated build root are that one gap;
+the container pinning that used to be part of it is now closed.
 
-Whether to finish that design or supersede it is tracked in
+Whether to finish that Mock migration or supersede the design is tracked in
 [#43](https://github.com/projectbluefin/utah-packages/issues/43).
 
 `.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
@@ -117,7 +120,7 @@ the local `[stages]` repository there, and uses that repository for the
 transaction; the artifact handoff and the dnf repository are both part of
 the dependency mechanism.
 
-Inside the Fedora 44 container, the workflow stages the verified source and
+Inside the digest-pinned build container, the workflow stages the verified source and
 runs `rpmbuild -br` to resolve generated BuildRequires, followed by
 `rpmbuild -ba` to produce the binary RPMs.
 
@@ -171,7 +174,8 @@ These rows are a design review's conclusions, and one of them collides with an
 already-approved design: `docs/superpowers/specs/` describes a Packit-driven
 Mock factory approved by the maintainer, which this review did not account for.
 Both agree the build belongs in mock. They differ on whether Packit drives it,
-and that difference decides the build container and the fate of roughly 1,445
-lines of Packit configuration and tooling. It is
-[#43](https://github.com/projectbluefin/utah-packages/issues/43), and nothing
-here acts on it.
+and that difference decides the fate of roughly 1,445 lines of Packit
+configuration and tooling. The build container itself is settled: the approved
+design pins `quay.io/packit/packit`, which every build now uses (see the
+table above). It is [#43](https://github.com/projectbluefin/utah-packages/issues/43), and nothing
+here acts on the remaining decision.

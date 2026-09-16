@@ -99,10 +99,10 @@ build container with Docker or Podman; there is no second execution substrate.
 | publication | GHCR OCI image, with Pages as the `main` mirror |
 
 The upstream Packit image is rebuilt daily and already contains the required
-toolchain. The pin used by this factory is:
+toolchain. The pin used by this factory, resolved 2026-09-16, is:
 
 ```text
-quay.io/packit/packit@sha256:8a1784251c51eed7a094820c894e2ee7f4ed4bbce4eb78eb172a04de3fae43e1
+quay.io/packit/packit@sha256:fb449261e85ba81f0f16a337cec80b43cf6dc8f34b5d9dde8737cf784a49a20b
 ```
 
 PRs #36--#40 and closed issue #35 settle the final decision: this

@@ -81,9 +81,9 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
         run: |
-          # The image below is quay.io/packit/packit:latest as of 2026-09-09,
-          # the only tag that repository publishes. The previous pin
-          # (sha256:149e6e06...c947494) was garbage-collected when upstream
+          # The image below is quay.io/packit/packit:latest as of 2026-09-16,
+          # the only tag that repository publishes. The pin
+          # (sha256:8a1784251c...) was garbage-collected when upstream
           # republished latest, and `docker run` then failed with
           # `manifest unknown` before the container started -- exit 125 on
           # every srpm job, on every branch. Renovate does not track this pin:
@@ -101,7 +101,7 @@ jobs:
             -v "$PWD:/repo:Z" \
             -v "$PWD/work/srpm:/out:Z" \
             -w /repo \
-            quay.io/packit/packit@sha256:8a1784251c51eed7a094820c894e2ee7f4ed4bbce4eb78eb172a04de3fae43e1 bash -exc '
+            quay.io/packit/packit@sha256:fb449261e85ba81f0f16a337cec80b43cf6dc8f34b5d9dde8737cf784a49a20b bash -exc '
               git config --global --add safe.directory "*"
               packit srpm --preserve-spec --output "/out/$PACKAGE.src.rpm" -p "$PACKAGE"
               python3 tools/source_pipeline.py "$PACKAGE" --verify-staged packages
