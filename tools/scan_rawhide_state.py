@@ -27,10 +27,20 @@ def query(package: str) -> dict[str, str] | None:
     ]
     result = subprocess.run(command, text=True, capture_output=True, check=False)
     lines = [line for line in result.stdout.splitlines() if line and "(none)" not in line]
-    if not lines:
-        return None
-    name, evr, arch, sourcerpm = lines[0].split("\t", 3)
-    return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
+    # repoquery can emit warnings/progress mixed into stdout, and a package whose
+    # query returns something unexpected does the same. Skip any line that is not
+    # the expected four tab-separated fields and note it on stderr, rather than
+    # letting one odd line take down the whole scan (issue #172).
+    for line in lines:
+        parts = line.split("\t", 3)
+        if len(parts) == 4:
+            name, evr, arch, sourcerpm = parts
+            return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
+        sys.stderr.write(
+            f"scan_rawhide_state: skipping unparseable repoquery line "
+            f"for {package!r}: {line!r}\n"
+        )
+    return None
 
 
 def main() -> int:

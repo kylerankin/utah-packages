@@ -70,6 +70,28 @@ class QueryTests(unittest.TestCase):
         with patch("subprocess.run", return_value=_repoquery_result("(none)\n")):
             self.assertIsNone(srs.query("ModemManager"))
 
+    def test_query_skips_warning_line_and_uses_good_one(self):
+        # A dnf5 warning mixed before the real repoquery line must not crash the
+        # scan; the warning is skipped and the well-formed line is parsed. (issue #172)
+        stdout = "Warning: some progress line\n" + REPOQUERY_LINE + "\n"
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)) as run:
+            value = srs.query("ModemManager")
+
+        self.assertEqual(value["name"], "ModemManager")
+        run.assert_called_once()
+
+    def test_query_skips_malformed_lines_until_a_four_field_one(self):
+        stdout = "\n".join(["garbage", "a\tb", REPOQUERY_LINE]) + "\n"
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)):
+            value = srs.query("ModemManager")
+
+        self.assertEqual(value["name"], "ModemManager")
+
+    def test_query_returns_none_when_no_line_has_four_fields(self):
+        stdout = "\n".join(["just a warning", "one\ttwo\n"])
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)):
+            self.assertIsNone(srs.query("ModemManager"))
+
 
 class MainTests(unittest.TestCase):
     def _write_manifest(self, tmp):

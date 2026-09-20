@@ -259,6 +259,27 @@ cache never replaces rebuild selection or final repository gates, and stale or
 directly changed packages never reuse it. Read
 [`package-build-cache.md`](package-build-cache.md) before changing this path.
 
+## 16. An observability tool that parses one line of external output crashes the whole run
+
+**What happened.** `tools/scan_rawhide_state.py`'s `query()` unpacked the first
+non-empty repoquery line into four tab-separated fields:
+`name, evr, arch, sourcerpm = lines[0].split("\t", 3)`. dnf5 writes warnings and
+progress to stdout under some conditions, and a package whose query returns
+something unexpected does the same, so a single line that was not in that exact
+shape raised `ValueError: not enough values to unpack` and took down the scan of
+all ~300 packages on a scheduled run (issue #172, red nightly since at least
+09-19). The existing unit tests only fed well-formed output, so the crash only
+ever surfaced on the live workflow.
+
+**Rule.** A scan or report tool that consumes the stdout of an external command
+(dnf repoquery, rpm, a parser) must skip any line that is not the expected shape
+and pick the first line that is, logging the discarded line to stderr rather
+than crashing. Treat external command output as untrusted: one malformed line
+must never lose the whole report, and the discarded line must be visible so a
+systematically malformed query is noticed. Cover the mixed-good/bad case in a
+unit test that mocks the command — tests that only feed clean output let this
+class of bug reach a scheduled run.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the
