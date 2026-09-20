@@ -35,6 +35,17 @@ def query(package: str) -> dict[str, str] | None:
         parts = line.split("\t", 3)
         if len(parts) == 4:
             name, evr, arch, sourcerpm = parts
+            # A warning/progress line that happens to carry 3+ tabs would pass
+            # the field count above; require the sourcerpm to look like a source
+            # RPM so garbage is skipped here (this PR's job) instead of reaching
+            # source_name(), which would raise. Non-blocking: a real line always
+            # ends in .src.rpm.
+            if not sourcerpm.endswith(".src.rpm"):
+                sys.stderr.write(
+                    f"scan_rawhide_state: skipping line with non-SRPM "
+                    f"sourcerpm for {package!r}: {line!r}\n"
+                )
+                continue
             return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
         sys.stderr.write(
             f"scan_rawhide_state: skipping unparseable repoquery line "

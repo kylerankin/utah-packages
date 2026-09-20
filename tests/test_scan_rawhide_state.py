@@ -82,10 +82,22 @@ class QueryTests(unittest.TestCase):
 
     def test_query_skips_malformed_lines_until_a_four_field_one(self):
         stdout = "\n".join(["garbage", "a\tb", REPOQUERY_LINE]) + "\n"
-        with patch("subprocess.run", return_value=_repoquery_result(stdout)):
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)) as run:
             value = srs.query("ModemManager")
 
         self.assertEqual(value["name"], "ModemManager")
+
+    def test_query_skips_four_field_line_with_non_srpm_sourcerpm(self):
+        # A warning/progress line can carry 3+ tabs and pass the field count;
+        # require the sourcerpm to end in .src.rpm so garbage never reaches
+        # source_name(), which would raise (issue #172 follow-up).
+        bad = "ModemManager\t1.24.0-1.fc44\tx86_64\tnot-a-source-rpm.txt"
+        stdout = "Warning: some\tprogress\tline\n" + bad + "\n"
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)) as run:
+            value = srs.query("ModemManager")
+
+        self.assertIsNone(value)
+        run.assert_called_once()
 
     def test_query_returns_none_when_no_line_has_four_fields(self):
         stdout = "\n".join(["just a warning", "one\ttwo\n"])
