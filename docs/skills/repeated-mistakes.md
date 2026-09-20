@@ -284,6 +284,15 @@ the crash downstream instead of removing it. Cover the mixed-good/bad case in a
 unit test that mocks the command — tests that only feed clean output let this
 class of bug reach a scheduled run.
 
+The lesson is not "dnf writes warnings to stdout". It is that #99 assumed dnf4
+`--qf` semantics on dnf5: dnf5 expands only `\n`, not `\t`, in the query format,
+so a `\t` is copied through as two characters and the per-arch records glue into
+one line, making `query()` return `None` for every package and turning the red
+nightly into a green nightly that reports nothing. The fix emits real tabs and a
+trailing newline and prefers the x86_64/noarch record over `lines[0]` (i686
+sorts first). Pin the real tab in a test so a return to a dnf4-style escape
+cannot happen unseen.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the

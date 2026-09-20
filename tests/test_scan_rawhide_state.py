@@ -43,7 +43,7 @@ def _repoquery_result(stdout):
 class QueryTests(unittest.TestCase):
     def test_query_parses_repoquery_output(self):
         cmd = ["dnf", "repoquery", "--latest-limit=1",
-               "--qf", "%{name}\\t%{evr}\\t%{arch}\\t%{sourcerpm}", "ModemManager"]
+               "--qf", "%{name}\t%{evr}\t%{arch}\t%{sourcerpm}\n", "ModemManager"]
         with patch("subprocess.run", return_value=_repoquery_result(REPOQUERY_LINE + "\n")) as run:
             value = srs.query("ModemManager")
 
@@ -54,6 +54,52 @@ class QueryTests(unittest.TestCase):
         )
         run.assert_called_once()
         self.assertEqual(run.call_args.args[0], cmd)
+
+    def test_query_uses_real_tabs_and_trailing_newline(self):
+        # dnf5 expands only \n in --qf, not \t, so the format must carry real tabs
+        # and a trailing newline. A literal "\t" glues the per-arch records into
+        # one line and the scan silently reports nothing (#172, #99's lesson). Pin
+        # the real tab so that regressing to a dnf4-style escape cannot happen
+        # unseen.
+        with patch("subprocess.run", return_value=_repoquery_result(REPOQUERY_LINE + "\n")) as run:
+            srs.query("ModemManager")
+        qf = run.call_args.args[0][4]
+        self.assertIn("\t", qf)
+        self.assertNotIn("\\t", qf)
+        self.assertTrue(qf.endswith("\n"))
+
+    def test_query_prefers_x86_64_over_i686(self):
+        # dnf5 emits one record per arch on its own line. i686 sorts first, so
+        # lines[0] would be i686; the source package is arch-independent but the
+        # report must pick a fixed arch. Prefer x86_64, then noarch (#172).
+        stdout = (
+            "ModemManager\t1.24.0-1.fc44\ti686\tModemManager-1.24.0-1.fc44.src.rpm\n"
+            "ModemManager\t1.24.0-1.fc44\tx86_64\tModemManager-1.24.0-1.fc44.src.rpm\n"
+        )
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)):
+            value = srs.query("ModemManager")
+        self.assertEqual(value["arch"], "x86_64")
+
+    def test_query_falls_back_to_noarch_when_no_x86_64(self):
+        stdout = (
+            "ModemManager\t1.24.0-1.fc44\ti686\tModemManager-1.24.0-1.fc44.src.rpm\n"
+            "ModemManager\t1.24.0-1.fc44\tnoarch\tModemManager-1.24.0-1.fc44.src.rpm\n"
+        )
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)):
+            value = srs.query("ModemManager")
+        self.assertEqual(value["arch"], "noarch")
+
+    def test_query_returns_none_when_records_are_glued(self):
+        # If dnf5 ever emits a literal backslash-t with no newline, the i686 and
+        # x86_64 records glue into one line that splits to a single field; the
+        # guard skips it and query() returns None rather than storing garbage
+        # (#172). This pins that the glued shape is swallowed, not parsed.
+        glued = (
+            "ModemManager\\t1.24.0-1.fc44\\ti686\\tModemManager-1.24.0-1.fc44.src.rpm"
+            "ModemManager\\t1.24.0-1.fc44\\tx86_64\\tModemManager-1.24.0-1.fc44.src.rpm"
+        )
+        with patch("subprocess.run", return_value=_repoquery_result(glued + "\n")):
+            self.assertIsNone(srs.query("ModemManager"))
 
     def test_query_returns_none_when_repoquery_has_no_lines(self):
         with patch("subprocess.run", return_value=_repoquery_result("")):

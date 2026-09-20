@@ -23,34 +23,36 @@ from tools.rawhide_sources import SRPM_NAME, import_binaries, source_name
 def query(package: str) -> dict[str, str] | None:
     command = [
         "dnf", "repoquery", "--latest-limit=1",
-        "--qf", "%{name}\\t%{evr}\\t%{arch}\\t%{sourcerpm}", package,
+        "--qf", "%{name}\t%{evr}\t%{arch}\t%{sourcerpm}\n", package,
     ]
     result = subprocess.run(command, text=True, capture_output=True, check=False)
     lines = [line for line in result.stdout.splitlines() if line and "(none)" not in line]
-    # repoquery can emit warnings/progress mixed into stdout, and a package whose
-    # query returns something unexpected does the same. Skip any line that is not
-    # the expected four tab-separated fields and note it on stderr, rather than
-    # letting one odd line take down the whole scan (issue #172).
-    for line in lines:
-        parts = line.split("\t", 3)
-        if len(parts) == 4:
-            name, evr, arch, sourcerpm = parts
-            # A warning/progress line that happens to carry 3+ tabs would pass
-            # the field count above. Validate against SRPM_NAME -- the same
-            # grammar source_name() applies -- so anything that would make
-            # source_name() raise is skipped here instead of being stored in
-            # state and crashing main() later (issue #172).
+    # dnf5 expands only \n in --qf, not \t (libdnf5-cli copies the two-char
+    # sequence through verbatim), so the format must carry real tabs and a
+    # trailing newline. A literal "\t" is copied through as backslash-t and the
+    # i686 and x86_64 records glue into one line, which is the "expected 4, got
+    # 1" that #99's dnf4-style format produced (#172): query() then returns None
+    # for every package and main() writes an empty report that exits green,
+    # hiding the crash instead of closing it. Prefer x86_64 then noarch over
+    # lines[0], which is i686 (arch sorts first); the source package is
+    # arch-independent but a fixed arch keeps the report deterministic. Skip any
+    # line that is not four real-tab fields (dnf5 can still emit warnings into
+    # stdout) rather than crashing (#172).
+    for arch in ("x86_64", "noarch"):
+        for line in lines:
+            parts = line.split("\t", 3)
+            if len(parts) != 4:
+                continue
+            name, evr, line_arch, sourcerpm = parts
+            if line_arch != arch:
+                continue
             if not SRPM_NAME.match(sourcerpm):
                 sys.stderr.write(
                     f"scan_rawhide_state: skipping line with non-SRPM "
                     f"sourcerpm for {package!r}: {line!r}\n"
                 )
                 continue
-            return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
-        sys.stderr.write(
-            f"scan_rawhide_state: skipping unparseable repoquery line "
-            f"for {package!r}: {line!r}\n"
-        )
+            return {"name": name, "evr": evr, "arch": line_arch, "sourcerpm": sourcerpm}
     return None
 
 
