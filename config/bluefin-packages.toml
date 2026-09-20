@@ -47,8 +47,6 @@ packages = [
     "fish",
     "flatpak-spawn",
     "firefox",
-    "fprintd",
-    "fprintd-pam",
     "fzf",
     "gcc",
     "gcc-c++",
