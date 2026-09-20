@@ -37,22 +37,39 @@ def query(package: str) -> dict[str, str] | None:
     # lines[0], which is i686 (arch sorts first); the source package is
     # arch-independent but a fixed arch keeps the report deterministic. Skip any
     # line that is not four real-tab fields (dnf5 can still emit warnings into
-    # stdout) rather than crashing (#172).
+    # stdout) rather than crashing (#172). Every discarded line and every
+    # package that survives parsing but has no selectable arch is logged to
+    # stderr, so a systematically malformed query or an arch-filtered package is
+    # visible instead of silently vanishing from the report.
+    records: dict[str, dict[str, str]] = {}
+    for line in lines:
+        parts = line.split("\t", 3)
+        if len(parts) != 4:
+            sys.stderr.write(
+                f"scan_rawhide_state: skipping line that is not four "
+                f"tab-separated fields for {package!r}: {line!r}\n"
+            )
+            continue
+        name, evr, line_arch, sourcerpm = parts
+        if not SRPM_NAME.match(sourcerpm):
+            sys.stderr.write(
+                f"scan_rawhide_state: skipping line with non-SRPM "
+                f"sourcerpm for {package!r}: {line!r}\n"
+            )
+            continue
+        records.setdefault(
+            line_arch,
+            {"name": name, "evr": evr, "arch": line_arch, "sourcerpm": sourcerpm},
+        )
     for arch in ("x86_64", "noarch"):
-        for line in lines:
-            parts = line.split("\t", 3)
-            if len(parts) != 4:
-                continue
-            name, evr, line_arch, sourcerpm = parts
-            if line_arch != arch:
-                continue
-            if not SRPM_NAME.match(sourcerpm):
-                sys.stderr.write(
-                    f"scan_rawhide_state: skipping line with non-SRPM "
-                    f"sourcerpm for {package!r}: {line!r}\n"
-                )
-                continue
-            return {"name": name, "evr": evr, "arch": line_arch, "sourcerpm": sourcerpm}
+        if arch in records:
+            return records[arch]
+    if records:
+        sys.stderr.write(
+            f"scan_rawhide_state: no x86_64 or noarch record for {package!r}; "
+            f"dropping it from the report (arches seen: "
+            f"{', '.join(sorted(records))})\n"
+        )
     return None
 
 

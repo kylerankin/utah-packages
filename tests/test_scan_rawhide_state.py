@@ -17,7 +17,7 @@ import json
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
 import tomllib
@@ -149,11 +149,47 @@ class QueryTests(unittest.TestCase):
         # ``.src.rpm`` alone is a weaker grammar than SRPM_NAME: this line would
         # pass a suffix check, be stored in state, and then crash main() inside
         # source_name(). The guard must use the same grammar source_name() does.
-        bad = "foo\tbar\tbaz\tqux.src.rpm"
+        # The arch is x86_64 so the arch preference cannot reject the line
+        # first -- the SRPM_NAME guard is what must do the rejecting.
+        bad = "foo\t1.0-1.fc44\tx86_64\tqux.src.rpm"
         with self.assertRaises(ValueError):
             source_name("qux.src.rpm")
-        with patch("subprocess.run", return_value=_repoquery_result(bad + "\n")):
+        stderr = StringIO()
+        with patch("subprocess.run", return_value=_repoquery_result(bad + "\n")), \
+             redirect_stderr(stderr):
             self.assertIsNone(srs.query("foo"))
+        self.assertIn("non-SRPM sourcerpm", stderr.getvalue())
+
+    def test_query_logs_lines_that_are_not_four_fields(self):
+        # Rule 16 promises every discarded line is visible on stderr, not just
+        # the ones that fail the SRPM_NAME guard, so a systematically malformed
+        # query is noticed instead of silently returning None.
+        stdout = "Warning: some progress line\n" + REPOQUERY_LINE + "\n"
+        stderr = StringIO()
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)), \
+             redirect_stderr(stderr):
+            value = srs.query("ModemManager")
+
+        self.assertEqual(value["name"], "ModemManager")
+        self.assertIn("not four tab-separated fields", stderr.getvalue())
+        self.assertIn("Warning: some progress line", stderr.getvalue())
+
+    def test_query_logs_when_only_unsupported_arches_are_present(self):
+        # A package whose records are all e.g. i686 is dropped from the report
+        # by the arch preference. That drop must be logged, otherwise the
+        # package vanishes from state with no trace.
+        stdout = (
+            "ModemManager\t1.24.0-1.fc44\ti686\tModemManager-1.24.0-1.fc44.src.rpm\n"
+            "ModemManager\t1.24.0-1.fc44\taarch64\tModemManager-1.24.0-1.fc44.src.rpm\n"
+        )
+        stderr = StringIO()
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)), \
+             redirect_stderr(stderr):
+            self.assertIsNone(srs.query("ModemManager"))
+
+        message = stderr.getvalue()
+        self.assertIn("no x86_64 or noarch record", message)
+        self.assertIn("aarch64, i686", message)
 
     def test_query_accepts_sourcerpm_source_name_can_parse(self):
         # The guard must not reject well-formed source RPMs, including names

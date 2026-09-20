@@ -280,7 +280,10 @@ systematically malformed query is noticed. When the skipped-line guard restates
 a validation that another function already performs, validate with *that*
 function's grammar (here `rawhide_sources.SRPM_NAME`), not a weaker stand-in
 like a `.src.rpm` suffix check: a weaker guard lets garbage into state and moves
-the crash downstream instead of removing it. Cover the mixed-good/bad case in a
+the crash downstream instead of removing it. A record that parses cleanly but is
+then dropped by a *selection* rule (here the x86_64/noarch arch preference) must
+be logged too — a silent drop is the same invisibility as a silent parse
+failure. Cover the mixed-good/bad case in a
 unit test that mocks the command — tests that only feed clean output let this
 class of bug reach a scheduled run.
 
