@@ -276,7 +276,11 @@ ever surfaced on the live workflow.
 and pick the first line that is, logging the discarded line to stderr rather
 than crashing. Treat external command output as untrusted: one malformed line
 must never lose the whole report, and the discarded line must be visible so a
-systematically malformed query is noticed. Cover the mixed-good/bad case in a
+systematically malformed query is noticed. When the skipped-line guard restates
+a validation that another function already performs, validate with *that*
+function's grammar (here `rawhide_sources.SRPM_NAME`), not a weaker stand-in
+like a `.src.rpm` suffix check: a weaker guard lets garbage into state and moves
+the crash downstream instead of removing it. Cover the mixed-good/bad case in a
 unit test that mocks the command — tests that only feed clean output let this
 class of bug reach a scheduled run.
 

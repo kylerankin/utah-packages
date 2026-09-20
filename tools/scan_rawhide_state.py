@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.rawhide_sources import import_binaries, source_name
+from tools.rawhide_sources import SRPM_NAME, import_binaries, source_name
 
 
 def query(package: str) -> dict[str, str] | None:
@@ -36,11 +36,11 @@ def query(package: str) -> dict[str, str] | None:
         if len(parts) == 4:
             name, evr, arch, sourcerpm = parts
             # A warning/progress line that happens to carry 3+ tabs would pass
-            # the field count above; require the sourcerpm to look like a source
-            # RPM so garbage is skipped here (this PR's job) instead of reaching
-            # source_name(), which would raise. Non-blocking: a real line always
-            # ends in .src.rpm.
-            if not sourcerpm.endswith(".src.rpm"):
+            # the field count above. Validate against SRPM_NAME -- the same
+            # grammar source_name() applies -- so anything that would make
+            # source_name() raise is skipped here instead of being stored in
+            # state and crashing main() later (issue #172).
+            if not SRPM_NAME.match(sourcerpm):
                 sys.stderr.write(
                     f"scan_rawhide_state: skipping line with non-SRPM "
                     f"sourcerpm for {package!r}: {line!r}\n"

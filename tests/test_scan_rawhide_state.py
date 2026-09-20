@@ -89,7 +89,7 @@ class QueryTests(unittest.TestCase):
 
     def test_query_skips_four_field_line_with_non_srpm_sourcerpm(self):
         # A warning/progress line can carry 3+ tabs and pass the field count;
-        # require the sourcerpm to end in .src.rpm so garbage never reaches
+        # validate the sourcerpm against SRPM_NAME so garbage never reaches
         # source_name(), which would raise (issue #172 follow-up).
         bad = "ModemManager\t1.24.0-1.fc44\tx86_64\tnot-a-source-rpm.txt"
         stdout = "Warning: some\tprogress\tline\n" + bad + "\n"
@@ -98,6 +98,27 @@ class QueryTests(unittest.TestCase):
 
         self.assertIsNone(value)
         run.assert_called_once()
+
+    def test_query_skips_srpm_suffixed_line_source_name_cannot_parse(self):
+        # ``.src.rpm`` alone is a weaker grammar than SRPM_NAME: this line would
+        # pass a suffix check, be stored in state, and then crash main() inside
+        # source_name(). The guard must use the same grammar source_name() does.
+        bad = "foo\tbar\tbaz\tqux.src.rpm"
+        with self.assertRaises(ValueError):
+            source_name("qux.src.rpm")
+        with patch("subprocess.run", return_value=_repoquery_result(bad + "\n")):
+            self.assertIsNone(srs.query("foo"))
+
+    def test_query_accepts_sourcerpm_source_name_can_parse(self):
+        # The guard must not reject well-formed source RPMs, including names
+        # that contain '-'.
+        line = ("gtk4-devel\t4.20.1-1.fc44\tx86_64\t"
+                "gtk4-4.20.1-1.fc44.src.rpm")
+        with patch("subprocess.run", return_value=_repoquery_result(line + "\n")):
+            value = srs.query("gtk4-devel")
+
+        self.assertIsNotNone(value)
+        self.assertEqual(source_name(value["sourcerpm"]), "gtk4")
 
     def test_query_returns_none_when_no_line_has_four_fields(self):
         stdout = "\n".join(["just a warning", "one\ttwo\n"])
