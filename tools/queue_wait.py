@@ -75,7 +75,7 @@ def queue_wait_seconds(run: dict, jobs: list[dict] | None) -> float | None:
     that is a measurement gap, not a zero wait, so it returns ``None`` rather
     than a misleadingly small number.
     """
-    created = parse_timestamp(run.get("created_at"))
+    created = parse_timestamp(run.get("run_started_at") or run.get("created_at"))
     if created is None:
         return None
     started = first_started_at(jobs or [])
@@ -236,7 +236,7 @@ def measure(
             jobs = fetch_jobs(token, owner, repo, run["id"])
             wait = queue_wait_seconds(run, jobs)
             records.append({
-                "workflow": run.get("head_branch") or run.get("event") or workflow_id,
+                "workflow": workflow_id,
                 "run_number": run.get("run_number"),
                 "head_branch": run.get("head_branch"),
                 "conclusion": run.get("conclusion"),

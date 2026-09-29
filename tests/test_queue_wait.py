@@ -10,17 +10,13 @@ queue wait, how percentiles behave on small samples, and that an unmeasurable
 run is reported as a gap rather than a zero wait.
 """
 
-import math
 import argparse
 import urllib.error
 import unittest
 from datetime import timedelta
 from unittest.mock import patch
-from pathlib import Path
 
 from tools import queue_wait as qw
-
-ROOT = Path(__file__).resolve().parent.parent
 
 
 class ParseTimestampTests(unittest.TestCase):
@@ -172,13 +168,6 @@ class CoerceSecondsTests(unittest.TestCase):
 
 class FetchJobsTests(unittest.TestCase):
     def test_404_yields_no_jobs(self):
-        class _FakeResponse:
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *exc):
-                return False
-
         def _raise(*_args, **_kwargs):
             raise urllib.error.HTTPError("url", 404, "Not Found", {}, None)
 

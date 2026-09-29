@@ -34,23 +34,35 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Measure queue wait for the rebuild workflow
-        # The tool writes reports/queue-wait.json and prints the overall summary
-        # to stdout. It exits non-zero when p50 exceeds the threshold, which is
-        # the alert: this job goes red and the daily run is the notification.
+        # Actions does not export GITHUB_TOKEN as a step env var (unlike the
+        # built-in github.token); the tool reads it from GITHUB_TOKEN, so pass
+        # it in explicitly or the scheduled run fails before any API call.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # Documented repo variable is QUEUE_WAIT_THRESHOLD (#304 "Done when").
+          # Passed through env, not interpolated into run:, per repo convention.
+          QUEUE_WAIT_THRESHOLD: ${{ vars.QUEUE_WAIT_THRESHOLD }}
         run: |
           set -euo pipefail
           threshold=()
-          # The agreed threshold is a maintainer decision (#304 "Done when"), so
-          # it lives in a repo variable and defaults to off. The metric (the
-          # report) is always produced; the alert is opt-in.
-          if [ -n "${{ vars.QUIET_THRESHOLD }}" ]; then
-            threshold=(--threshold "${{ vars.QUIET_THRESHOLD }}")
+          if [ -n "$QUEUE_WAIT_THRESHOLD" ]; then
+            threshold=(--threshold "$QUEUE_WAIT_THRESHOLD")
           fi
           python3 tools/queue_wait.py \
             --workflow rebuild-rpms.yml \
             --limit 50 \
             "${threshold[@]}" \
             --output reports/queue-wait.json
+      - name: Keep the daily report
+        # The report is the durable record (#304: watch it for two weeks). The
+        # step summary is ephemeral; upload the JSON so history survives.
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: queue-wait-report
+          path: reports/queue-wait.json
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Summarise the result in the step
         if: ${{ always() }}
         shell: bash
