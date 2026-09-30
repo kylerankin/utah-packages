@@ -195,7 +195,9 @@ def fetch_runs(token: str, owner: str, repo: str, workflow_id: str) -> list[dict
         f"/actions/workflows/{workflow_id}/runs?per_page={PER_PAGE}&status=completed"
     )
     payload = _http_get_json(url, token)
-    return payload.get("runs", [])
+    # The runs list endpoint returns its array under "workflow_runs"; reading
+    # "runs" silently returned [] and the job reported zero runs measured.
+    return payload.get("workflow_runs", [])
 
 
 def fetch_jobs(token: str, owner: str, repo: str, run_id: int) -> list[dict]:
