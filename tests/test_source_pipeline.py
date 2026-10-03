@@ -690,6 +690,27 @@ class StagedVerificationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "MD5 mismatch for"):
                     verify_staged_sources(package, root / "packages")
 
+    def test_source0_md5_manifest_line_does_not_downgrade_the_sha512_lock(self) -> None:
+        # A legacy md5 manifest line naming the Source0 file must not replace
+        # the recipe's locked sha512 with a weaker md5 check (security).
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            payload = b"staged source0 bytes"
+            md5 = hashlib.md5(payload).hexdigest()
+            locked_sha512 = "0" * 128
+            (package_dir / "demo.tar.xz").write_bytes(payload)
+            (package_dir / "sources").write_text(f"{md5}  demo.tar.xz\n")
+            package = {
+                "name": "demo",
+                "filename": "demo.tar.xz",
+                "sha512": locked_sha512,
+            }
+            with working_directory(root):
+                with self.assertRaisesRegex(ValueError, "SHA-512 mismatch for"):
+                    verify_staged_sources(package, root / "packages")
+
 
 class StageForPackitTests(unittest.TestCase):
     def test_missing_recipe_directory_is_rejected(self) -> None:
