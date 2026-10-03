@@ -183,9 +183,10 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
 
         tar -xf /.../gvdb.tar.xz: No such file or directory
 
-    the moment the buildroot resolved. Each entry names its own SHA-512 and the
-    lookaside is addressed by that hash, so the URL is only satisfiable by the
-    exact bytes recorded here.
+    the moment the buildroot resolved. Each entry names its own SHA-512 (or,
+    for legacy lines, MD5) and the lookaside is addressed by that algorithm and
+    hash, so the URL is only satisfiable by the exact bytes recorded here, and
+    the download is re-verified against the same digest.
     """
     fetched = []
     for filename, expected, algorithm in source_manifest(package):
