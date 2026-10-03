@@ -22,9 +22,10 @@ do.
 
 ## The metric
 
-"Queue wait" is `created_at` of a run minus the earliest `started_at` among its
-jobs — the wall-clock time a run sat pending before its first job ran. That is
-the saturation #304 is about. The numbers come from the GitHub Actions API
+"Queue wait" is a run's `run_started_at` (falling back to `created_at` when the
+run record carries none) minus the earliest `started_at` among its jobs — the
+wall-clock time a run sat pending before its first job ran. That is the
+saturation #304 is about. The numbers come from the GitHub Actions API
 (`GET .../actions/workflows/{id}/runs` and `.../runs/{id}/jobs`), never from
 anything a workflow prints.
 

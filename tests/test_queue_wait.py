@@ -174,6 +174,30 @@ class FetchJobsTests(unittest.TestCase):
         with patch.object(qw.urllib.request, "urlopen", side_effect=_raise):
             self.assertEqual(qw.fetch_jobs("tok", "o", "r", 1), [])
 
+    def test_request_carries_the_per_page_shape(self):
+        # PER_PAGE is a constant precisely so this request shape is assertable;
+        # pin it so a refactor that hard-codes the page size cannot silently
+        # drop the parameter and silently truncate the result.
+        captured = {}
+
+        class _Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_a):
+                return False
+
+            def read(self):
+                return b'{"jobs": []}'
+
+        def _capture(request, *_, **__):
+            captured["url"] = request.get_full_url()
+            return _Resp()
+
+        with patch.object(qw.urllib.request, "urlopen", side_effect=_capture):
+            self.assertEqual(qw.fetch_jobs("tok", "o", "r", 1), [])
+        self.assertIn(f"per_page={qw.PER_PAGE}", captured["url"])
+
 
 if __name__ == "__main__":
     unittest.main()
