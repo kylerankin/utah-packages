@@ -216,10 +216,16 @@ def verify_staged_sources(package: dict, package_root: Path) -> list[str]:
         # nothing but itself in the SRPM, and the placeholder archive
         # tools/packit_source0.py writes to satisfy Packit is not a source.
         return []
+    package_filename = package.get("filename", "")
     expected_sources: dict[str, tuple[str, str]] = {
-        package.get("filename", ""): (package["sha512"].lower(), "sha512"),
+        package_filename: (package["sha512"].lower(), "sha512"),
     }
     for filename, expected, algorithm in source_manifest(package):
+        if filename == package_filename:
+            # Source0 is locked by the recipe's sha512 above; a legacy md5
+            # manifest line naming the same file must not downgrade that check
+            # to md5, which the post-Packit gate would then accept.
+            continue
         expected_sources[filename] = (expected, algorithm)
     verified = []
     for filename, (expected, algorithm) in expected_sources.items():
