@@ -11,6 +11,7 @@ run is reported as a gap rather than a zero wait.
 """
 
 import argparse
+import json
 import urllib.error
 import unittest
 from datetime import timedelta
@@ -164,6 +165,132 @@ class CoerceSecondsTests(unittest.TestCase):
     def test_invalid_raises(self):
         with self.assertRaises(argparse.ArgumentTypeError):
             qw._coerce_seconds("nope")
+
+
+class JobWaitTests(unittest.TestCase):
+    def test_wait_is_started_minus_created(self):
+        job = {"created_at": "2026-09-28T12:00:00Z", "started_at": "2026-09-28T12:05:00Z"}
+        self.assertEqual(qw.job_wait_seconds(job), 300.0)
+
+    def test_missing_created_is_none(self):
+        self.assertIsNone(qw.job_wait_seconds({"started_at": "2026-09-28T12:05:00Z"}))
+
+    def test_missing_started_is_none(self):
+        self.assertIsNone(qw.job_wait_seconds({"created_at": "2026-09-28T12:00:00Z"}))
+
+
+class FetchRunsPaginationTests(unittest.TestCase):
+    def test_walks_pages_until_limit(self):
+        # Each page returns one run; the third page is empty, so a request for
+        # limit=2 must fetch pages 1 and 2 and confirm page 3 is empty.
+        pages = {1: [1], 2: [2], 3: []}
+        captured = []
+
+        class _Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_a):
+                return False
+
+            def read(self):
+                params = dict(p.split("=") for p in captured[-1].split("?")[1].split("&"))
+                page = int(params["page"])
+                body = json.dumps({"workflow_runs": [{"id": i} for i in pages.get(page, [])]})
+                return body.encode()
+
+        def _capture(request, *_, **__):
+            captured.append(request.get_full_url())
+            return _Resp()
+
+        with patch.object(qw.urllib.request, "urlopen", side_effect=_capture):
+            runs = qw.fetch_runs("tok", "o", "r", "wf.yml", limit=2)
+        self.assertEqual([r["id"] for r in runs], [1, 2])
+        # Two runs came from two pages; the loop stops as soon as limit is met,
+        # so it never fetches a confirming empty third page.
+        self.assertEqual(len(captured), 2)
+        self.assertIn("page=1", captured[0])
+        self.assertIn("page=2", captured[1])
+
+    def test_fetches_empty_confirming_page_then_stops(self):
+        # limit larger than what exists: pages 1 and 2 return runs, page 3 is
+        # empty, so the loop fetches page 3, sees nothing, and breaks.
+        pages = {1: [1, 2], 2: [3], 3: []}
+        captured = []
+
+        class _Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_a):
+                return False
+
+            def read(self):
+                params = dict(p.split("=") for p in captured[-1].split("?")[1].split("&"))
+                page = int(params["page"])
+                return json.dumps({"workflow_runs": [{"id": i} for i in pages.get(page, [])]}).encode()
+
+        def _capture(request, *_, **__):
+            captured.append(request.get_full_url())
+            return _Resp()
+
+        with patch.object(qw.urllib.request, "urlopen", side_effect=_capture):
+            runs = qw.fetch_runs("tok", "o", "r", "wf.yml", limit=5)
+        self.assertEqual([r["id"] for r in runs], [1, 2, 3])
+        self.assertEqual(len(captured), 3)
+        self.assertIn("page=3", captured[2])
+
+    def test_stops_at_limit_without_extra_request(self):
+        class _Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_a):
+                return False
+
+            def read(self):
+                return b'{"workflow_runs": [{"id": 1}, {"id": 2}]}'
+
+        captured = []
+
+        def _capture(request, *_, **__):
+            captured.append(request.get_full_url())
+            return _Resp()
+
+        with patch.object(qw.urllib.request, "urlopen", side_effect=_capture):
+            runs = qw.fetch_runs("tok", "o", "r", "wf.yml", limit=2)
+        self.assertEqual(len(runs), 2)
+        # One page of two satisfied the limit; no second request was made.
+        self.assertEqual(len(captured), 1)
+
+
+class PerJobSummaryTests(unittest.TestCase):
+    def test_empty_per_job_is_zeroed(self):
+        report = qw.summarize([], per_job=[])
+        self.assertEqual(report["per_job"]["jobs_measured"], 0)
+        self.assertEqual(report["per_job"]["by_runner"], {})
+
+    def test_buckets_by_runner(self):
+        per_job = [
+            {"runner_id": 1, "wait_seconds": 100.0},
+            {"runner_id": 1, "wait_seconds": 300.0},
+            {"runner_id": 2, "wait_seconds": 600.0},
+        ]
+        report = qw.summarize([], per_job=per_job)
+        pj = report["per_job"]
+        self.assertEqual(pj["jobs_measured"], 3)
+        self.assertEqual(pj["by_runner"]["1"]["jobs"], 2)
+        self.assertEqual(pj["by_runner"]["2"]["jobs"], 1)
+        # p90 over [100, 300, 600] is dominated by the 600 on runner 2.
+        self.assertEqual(pj["by_runner"]["2"]["max_seconds"], 600.0)
+
+    def test_none_waits_are_excluded(self):
+        per_job = [
+            {"runner_id": 1, "wait_seconds": 100.0},
+            {"runner_id": 1, "wait_seconds": None},
+        ]
+        report = qw.summarize([], per_job=per_job)
+        self.assertEqual(report["per_job"]["jobs_measured"], 1)
 
 
 class FetchJobsTests(unittest.TestCase):

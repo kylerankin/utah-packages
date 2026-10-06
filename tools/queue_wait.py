@@ -17,6 +17,15 @@ The GitHub Actions API is the source of truth for both timestamps, so this
 tool reads runs and their jobs rather than trusting anything a workflow prints.
 The network calls live in :func:`measure`; the parsing, percentile and
 threshold logic is pure and unit-tested here.
+
+Saturation also shows up per runner: one run can fan out across many jobs that
+each wait their own stretch for a runner before starting. :func:`job_wait_seconds`
+captures that per-job view, and :func:`measure` returns it alongside the run-level
+record so :func:`summarize` can bucket it by runner.
+
+A rebuild wave can exceed the Actions page size, so :func:`fetch_runs` paginates
+until it has collected the requested number of runs instead of trusting a
+single page.
 """
 from __future__ import annotations
 
@@ -33,9 +42,9 @@ from pathlib import Path
 DEFAULT_OWNER = "projectbluefin"
 DEFAULT_REPO = "utah-packages"
 
-# GitHub pages a run list at 100 items; a rebuild wave rarely has more than a
-# handful of runs per day, so this is enough for a daily job without a second
-# request. Kept as a constant so tests can assert the request shape.
+# GitHub pages a run list at 100 items per page. Kept as a constant so the
+# request shape is assertable; pagination in :func:`fetch_runs` walks pages of
+# this size until the requested run count is reached.
 PER_PAGE = 100
 
 
@@ -80,6 +89,22 @@ def queue_wait_seconds(run: dict, jobs: list[dict] | None) -> float | None:
         return None
     started = first_started_at(jobs or [])
     if started is None:
+        return None
+    return (started - created).total_seconds()
+
+
+def job_wait_seconds(job: dict) -> float | None:
+    """Queue wait for one job: its own ``created_at`` to ``started_at``.
+
+    A job's ``created_at`` is when the scheduler placed it on a runner; its
+    ``started_at`` is when it actually began. The gap is how long that specific
+    job waited for a runner -- the per-runner view of saturation that a run-level
+    number hides when one run fans out across many jobs. Returns ``None`` when
+    either timestamp is missing (a job that never scheduled), which callers skip.
+    """
+    created = parse_timestamp(job.get("created_at"))
+    started = parse_timestamp(job.get("started_at"))
+    if created is None or started is None:
         return None
     return (started - created).total_seconds()
 
@@ -134,13 +159,18 @@ def _bucket(waits: list[dict], threshold_seconds: float | None) -> dict:
     return summary
 
 
-def summarize(waits: list[dict], threshold_seconds: float | None = None) -> dict:
+def summarize(
+    waits: list[dict],
+    threshold_seconds: float | None = None,
+    per_job: list[dict] | None = None,
+) -> dict:
     """Summarise per-run queue waits into an overall and per-workflow report.
 
     Each entry in ``waits`` is a dict with at least ``workflow``, ``run_number``,
     ``head_branch``, ``conclusion`` and ``wait_seconds``. ``wait_seconds`` may be
     ``None`` when the run never started a job; those are counted as observed but
-    excluded from the percentile math.
+    excluded from the percentile math. ``per_job`` is an optional list of
+    per-job records (see :func:`measure`) bucketed by runner.
     """
     measured = [w for w in waits if w["wait_seconds"] is not None]
     per_workflow: dict[str, list[dict]] = {}
@@ -157,7 +187,37 @@ def summarize(waits: list[dict], threshold_seconds: float | None = None) -> dict
         "threshold_seconds": threshold_seconds,
         "overall": overall_summary,
         "workflows": workflows_summary,
+        "per_job": _per_job_summary(per_job or []),
         "threshold_exceeded": overall_summary["threshold_exceeded"],
+    }
+
+
+def _per_job_summary(per_job: list[dict]) -> dict:
+    """Summarise per-job waits grouped by runner, so a saturated runner stands out.
+
+    Each entry in ``per_job`` carries a ``runner_id`` and its own
+    ``wait_seconds``. A run with no measured jobs yields an empty report rather
+    than an error, so the scheduled job still produces output on quiet days.
+    """
+    seconds = [j["wait_seconds"] for j in per_job if j["wait_seconds"] is not None]
+    by_runner: dict[str, list[float]] = {}
+    for job in per_job:
+        if job.get("wait_seconds") is not None:
+            by_runner.setdefault(str(job.get("runner_id")), []).append(job["wait_seconds"])
+    return {
+        "jobs_measured": len(seconds),
+        "p50_seconds": percentile(seconds, 50),
+        "p90_seconds": percentile(seconds, 90),
+        "max_seconds": max(seconds) if seconds else 0.0,
+        "by_runner": {
+            runner: {
+                "jobs": len(values),
+                "p50_seconds": percentile(values, 50),
+                "p90_seconds": percentile(values, 90),
+                "max_seconds": max(values) if values else 0.0,
+            }
+            for runner, values in sorted(by_runner.items())
+        },
     }
 
 
@@ -188,16 +248,29 @@ def _http_get_json(url: str, token: str) -> dict:
         return json.loads(response.read().decode())
 
 
-def fetch_runs(token: str, owner: str, repo: str, workflow_id: str) -> list[dict]:
-    """Fetch the most recent completed runs of one workflow from the Actions API."""
-    url = (
-        f"https://api.github.com/repos/{owner}/{repo}"
-        f"/actions/workflows/{workflow_id}/runs?per_page={PER_PAGE}&status=completed"
-    )
-    payload = _http_get_json(url, token)
-    # The runs list endpoint returns its array under "workflow_runs"; reading
-    # "runs" silently returned [] and the job reported zero runs measured.
-    return payload.get("workflow_runs", [])
+def fetch_runs(
+    token: str, owner: str, repo: str, workflow_id: str, limit: int = PER_PAGE
+) -> list[dict]:
+    """Fetch up to ``limit`` of the most recent completed runs of one workflow.
+
+    Paginate the Actions run list (``PER_PAGE`` items per page) until ``limit``
+    runs are collected or the API returns an empty page, so a rebuild wave
+    larger than a single page is never silently truncated to the first page.
+    """
+    runs: list[dict] = []
+    page = 1
+    while len(runs) < limit:
+        url = (
+            f"https://api.github.com/repos/{owner}/{repo}"
+            f"/actions/workflows/{workflow_id}/runs?per_page={PER_PAGE}&page={page}&status=completed"
+        )
+        payload = _http_get_json(url, token)
+        batch = payload.get("workflow_runs", [])
+        if not batch:
+            break
+        runs.extend(batch)
+        page += 1
+    return runs[:limit]
 
 
 def fetch_jobs(token: str, owner: str, repo: str, run_id: int) -> list[dict]:
@@ -224,17 +297,20 @@ def measure(
     repo: str,
     workflow_ids: list[str],
     runs_per_workflow: int = 50,
-) -> list[dict]:
-    """Return one wait record per completed run across the given workflows.
+) -> tuple[list[dict], list[dict]]:
+    """Return run-level and per-job wait records across the given workflows.
 
     ``workflow_ids`` may be workflow filenames (``rebuild-rpms.yml``) or numeric
-    IDs; the API accepts both. Each record carries the fields :func:`summarize`
-    needs plus the raw ``wait_seconds`` so callers can re-bucket however they like.
+    IDs; the API accepts both. The first return value is one record per
+    completed run with the fields :func:`summarize` needs. The second is one
+    record per job that actually started, carrying its ``runner_id`` and its
+    own queue wait, so saturation can be viewed per runner as well as per run.
     """
     records: list[dict] = []
+    per_job: list[dict] = []
     for workflow_id in workflow_ids:
-        runs = fetch_runs(token, owner, repo, workflow_id)
-        for run in runs[:runs_per_workflow]:
+        runs = fetch_runs(token, owner, repo, workflow_id, limit=runs_per_workflow)
+        for run in runs:
             jobs = fetch_jobs(token, owner, repo, run["id"])
             wait = queue_wait_seconds(run, jobs)
             records.append({
@@ -244,7 +320,17 @@ def measure(
                 "conclusion": run.get("conclusion"),
                 "wait_seconds": wait,
             })
-    return records
+            for job in jobs:
+                jwait = job_wait_seconds(job)
+                if jwait is not None:
+                    per_job.append({
+                        "runner_id": job.get("runner_id"),
+                        "wait_seconds": jwait,
+                        "job_name": job.get("name"),
+                        "head_branch": run.get("head_branch"),
+                        "conclusion": run.get("conclusion"),
+                    })
+    return records, per_job
 
 
 def main() -> int:
@@ -276,7 +362,7 @@ def main() -> int:
         return 2
 
     try:
-        waits = measure(args.token, args.owner, args.repo, workflows, runs_per_workflow=args.limit)
+        waits, per_job = measure(args.token, args.owner, args.repo, workflows, runs_per_workflow=args.limit)
     except urllib.error.HTTPError as error:
         if error.code in (403, 404):
             print(
@@ -290,7 +376,7 @@ def main() -> int:
         print(f"could not reach the Actions API: {error}", file=sys.stderr)
         return 2
 
-    report = summarize(waits, threshold_seconds=args.threshold)
+    report = summarize(waits, threshold_seconds=args.threshold, per_job=per_job)
 
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

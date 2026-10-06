@@ -91,6 +91,22 @@ jobs:
                   f"Worst: run #{worst['run_number']} ({worst['head_branch']}) — "
                   f"{worst['wait_seconds'] / 60:.1f} min, {worst['conclusion']}"
               )
+          per_job = report.get("per_job", {})
+          if per_job.get("jobs_measured"):
+              print(
+                  f"Per-job (per runner): p50 **{per_job['p50_seconds'] / 60:.1f} min**"
+                  f" · p90 **{per_job['p90_seconds'] / 60:.1f} min** · max **{per_job['max_seconds'] / 60:.1f} min**"
+              )
+              # Name the runner that waited longest, the saturation signal a
+              # run-level number hides when one run fans out across many jobs.
+              by_runner = per_job.get("by_runner", {})
+              if by_runner:
+                  worst_runner = max(by_runner.items(), key=lambda kv: kv[1]["max_seconds"])
+                  runner_id, stats = worst_runner
+                  print(
+                      f"Worst runner #{runner_id}: {stats['jobs']} jobs, "
+                      f"max {stats['max_seconds'] / 60:.1f} min wait."
+                  )
           if overall.get("threshold_exceeded"):
               print(
                   "\n:rotating_light: p50 queue wait exceeds the "
