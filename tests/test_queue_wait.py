@@ -338,6 +338,53 @@ class RenderStepSummaryTests(unittest.TestCase):
         self.assertIn("Worst runner pool `p`", written)
 
 
+
+class MainHttpErrorTests(unittest.TestCase):
+    """API failures exit 2 so they are never mistaken for the threshold alert (1)."""
+
+    def _run(self, error):
+        import io
+        err = io.StringIO()
+        with patch("sys.argv", ["queue_wait.py", "--token", "tok"]), \
+             patch.object(qw, "measure", side_effect=error), \
+             patch("sys.stderr", err):
+            code = qw.main()
+        return code, err.getvalue()
+
+    def _error(self, code, headers=None):
+        return urllib.error.HTTPError("url", code, "reason", headers or {}, None)
+
+    def test_server_error_exits_2(self):
+        code, msg = self._run(self._error(502))
+        self.assertEqual(code, 2)
+        self.assertIn("502", msg)
+
+    def test_429_reports_rate_limit(self):
+        code, msg = self._run(self._error(429))
+        self.assertEqual(code, 2)
+        self.assertIn("rate limited", msg)
+
+    def test_403_secondary_rate_limit_is_not_a_permission_error(self):
+        code, msg = self._run(self._error(403, {"Retry-After": "60"}))
+        self.assertEqual(code, 2)
+        self.assertIn("rate limited", msg)
+        self.assertNotIn("actions: read", msg)
+
+    def test_403_exhausted_quota_is_rate_limit(self):
+        code, msg = self._run(self._error(403, {"X-RateLimit-Remaining": "0"}))
+        self.assertIn("rate limited", msg)
+
+    def test_403_without_rate_limit_headers_is_permissions(self):
+        code, msg = self._run(self._error(403))
+        self.assertEqual(code, 2)
+        self.assertIn("actions: read", msg)
+
+    def test_401_exits_2(self):
+        code, msg = self._run(self._error(401))
+        self.assertEqual(code, 2)
+        self.assertIn("token", msg)
+
+
 class RunnerPoolTests(unittest.TestCase):
     def test_labels_name_the_pool_order_independent(self):
         self.assertEqual(

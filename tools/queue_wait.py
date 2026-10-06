@@ -424,6 +424,23 @@ def measure(
     return records, per_job
 
 
+def _describe_http_error(error: urllib.error.HTTPError) -> str:
+    """Explain an Actions API failure without conflating rate limits and permissions."""
+    headers = error.headers or {}
+    rate_limited = error.code == 429 or (
+        error.code == 403
+        and (headers.get("X-RateLimit-Remaining") == "0" or headers.get("Retry-After"))
+    )
+    if rate_limited:
+        return f"Actions API request was rate limited ({error.code}); retry later or lower --limit"
+    if error.code in (401, 403, 404):
+        return (
+            f"Actions API request failed ({error.code}): check the token is valid "
+            "and the job has the 'actions: read' permission"
+        )
+    return f"Actions API request failed ({error.code} {error.reason})"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -466,14 +483,10 @@ def main() -> int:
     try:
         waits, per_job = measure(args.token, args.owner, args.repo, workflows, runs_per_workflow=args.limit)
     except urllib.error.HTTPError as error:
-        if error.code in (403, 404):
-            print(
-                f"Actions API request failed ({error.code}): this job needs the "
-                "'actions: read' permission",
-                file=sys.stderr,
-            )
-            return 2
-        raise
+        # Every API failure exits 2 so it is never mistaken for the threshold
+        # alert (exit 1).
+        print(_describe_http_error(error), file=sys.stderr)
+        return 2
     except urllib.error.URLError as error:
         print(f"could not reach the Actions API: {error}", file=sys.stderr)
         return 2
