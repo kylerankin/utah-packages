@@ -14,7 +14,8 @@ is written in three places that must move together, and Renovate can rewrite
 only the first:
 
   config/upstream-sources.json  version, url, filename, sha512, sha256_url,
-                                fallback_urls
+                                fallback_urls (a legacy md5 pin's `md5`
+                                field is dropped)
   packages/<pkg>/<pkg>.spec     Version:, Release:
   packages/<pkg>/sources        SHA512 (<tarball>) = <digest>
 
@@ -429,6 +430,9 @@ def planned_entry(entry: dict, release: str, digest: str, module: str | None = N
     updated["url"] = f"{base}/{name}"
     updated["filename"] = name
     updated["sha512"] = digest
+    # rewrite_sources() repins the manifest as SHA512, so a legacy md5 lock
+    # digest no longer describes anything.
+    updated.pop("md5", None)
     if "sha256_url" in entry:
         updated["sha256_url"] = f"{base}/{module}-{tarball}.sha256sum"
     if entry.get("fallback_urls"):
@@ -482,6 +486,7 @@ def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
             updated[field] = substituted(entry[field], swaps)
     updated["version"] = release
     updated["sha512"] = digest
+    updated.pop("md5", None)
     return updated
 
 
@@ -561,15 +566,31 @@ def rewrite_spec(spec: Path, release: str) -> bool:
 # Fedora `sources` manifests use the BSD form (`SHA512 (file) = <hex>`) and,
 # in older recipes, the legacy md5sum form (`<32 hex>  file`). Ten carried
 # recipes still use the latter.
+# tests/test_source_inventory.py shares this parser; keep one pattern.
 MANIFEST_LINE = re.compile(
-    r"(?:[A-Za-z0-9]+ \((?P<bsd>\S+)\) = [0-9a-fA-F]+|[0-9a-fA-F]{32} [ *](?P<md5>\S+))"
+    r"(?:(?P<algo>[A-Za-z][A-Za-z0-9]*) \((?P<bsd>\S+)\) = (?P<bsd_hash>[0-9a-fA-F]+)"
+    r"|(?P<md5_hash>[0-9a-fA-F]{32}) [ *](?P<md5>\S+))"
 )
+
+
+def manifest_pin(line: str) -> tuple[str, str, str] | None:
+    """The (file, algorithm, digest) a manifest line pins, or None.
+
+    The algorithm is lowercased (`sha512`, `md5`) to match the lock field
+    names in config/upstream-sources.json; a legacy md5sum line is `md5`.
+    """
+    match = MANIFEST_LINE.fullmatch(line.strip())
+    if not match:
+        return None
+    if match.group("bsd") is not None:
+        return match.group("bsd"), match.group("algo").lower(), match.group("bsd_hash").lower()
+    return match.group("md5"), "md5", match.group("md5_hash").lower()
 
 
 def manifest_name(line: str) -> str | None:
     """The file a manifest line pins, or None for a line in neither form."""
-    match = MANIFEST_LINE.fullmatch(line.strip())
-    return (match.group("bsd") or match.group("md5")) if match else None
+    pin = manifest_pin(line)
+    return pin[0] if pin else None
 
 
 def version_bound(filename: str, version: str) -> bool:

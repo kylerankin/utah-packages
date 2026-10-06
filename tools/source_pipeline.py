@@ -4,7 +4,10 @@
 The configuration intentionally uses JSON so the standard Python runtime on
 GitHub-hosted runners is sufficient.  A package entry has ``name``, ``url``,
 and a required ``sha512``.  An optional ``sha256_url`` points at an upstream
-checksum manifest; the downloaded archive must appear in that manifest.
+checksum manifest; the downloaded archive must appear in that manifest.  An
+optional ``md5`` records the digest of a recipe whose ``sources`` manifest
+still pins the file in the legacy md5sum form; it is checked only against that
+manifest pin (tests/test_source_inventory.py), never used to verify a download.
 """
 
 from __future__ import annotations

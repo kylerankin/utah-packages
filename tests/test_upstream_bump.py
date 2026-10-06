@@ -326,6 +326,11 @@ class EntryRewriteTests(unittest.TestCase):
             ],
         )
 
+    def test_drops_a_legacy_md5_digest_the_sha512_repin_supersedes(self) -> None:
+        entry = dict(self.entry, md5="b304bbe8ab63373924a744eac9ebc652")
+        new = planned_entry(entry, "51.0", "f" * 128)
+        self.assertNotIn("md5", new)
+
     def test_keeps_the_fields_a_bump_must_not_touch(self) -> None:
         new = planned_entry(self.entry, "51.0", "f" * 128)
         self.assertEqual(new["stage"], 10)
@@ -1495,6 +1500,18 @@ class ForgeProposalTests(unittest.TestCase):
 
 
 class ForgeEntryRewriteTests(unittest.TestCase):
+    def test_drops_a_legacy_md5_digest_the_sha512_repin_supersedes(self):
+        entry = {
+            "name": "cdparanoia",
+            "version": "10.2",
+            "url": "https://example.org/cdparanoia-III-10.2.src.tgz",
+            "filename": "cdparanoia-III-10.2.src.tgz",
+            "sha512": "old" * 10,
+            "md5": "b304bbe8ab63373924a744eac9ebc652",
+        }
+        updated = forge_planned_entry(entry, "10.3", "new" * 10)
+        self.assertNotIn("md5", updated)
+
     def test_every_url_field_moves_together(self):
         entry = {
             "name": "ddcutil",

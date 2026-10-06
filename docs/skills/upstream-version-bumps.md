@@ -63,13 +63,15 @@ The lock-vs-manifest consistency check (`LockManifestConsistencyTests` in
 silently skips the legacy-md5 recipes the same way. Before #393 its regex only
 matched `SHA512 (file) = <128hex>` lines, so every md5-pinned recipe fell
 through with no comparison at all — a gap a review flagged (#393). It now
-parses the BSD form (any `ALGO`, algorithm threaded through) and the legacy
-`<32hex>  file` form as `md5`, and compares each pin against the lock digest
-recorded under the same algorithm. Those md5-pinned recipes therefore carry an
-`md5` field in `config/upstream-sources.json` (added #393); a pin whose
-algorithm the lock has no digest for is skipped explicitly rather than
-vanishing. A future "simplify the regex" edit that drops the md5 arm
-reintroduces the silent skip.
+uses the same parser as the bump (`manifest_pin` in `tools/upstream_bump.py`),
+which reads the BSD form (any `ALGO`, algorithm threaded through) and the
+legacy `<32hex>  file` form as `md5`, and compares each pin against the lock
+digest recorded under the same algorithm. Those md5-pinned recipes therefore
+carry an `md5` field in `config/upstream-sources.json` (added #393). A pin
+whose algorithm the lock has no digest for fails the test unless its recipe is
+listed in `MISSING_ALGORITHM_ALLOWED` (empty today), so a newly imported
+md5-pinned recipe without an `md5` lock field is caught rather than unchecked.
+A bump repins the manifest as SHA512 and drops the then-dead `md5` field.
 
 ## When a bumped recipe fails
 

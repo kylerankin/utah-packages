@@ -3,7 +3,6 @@
 
 import json
 from pathlib import Path
-import re
 import unittest
 
 from tools.bootstrap_upstream_sources import (
@@ -12,6 +11,7 @@ from tools.bootstrap_upstream_sources import (
     plan_targets,
 )
 from tools.package_inventory import inventory
+from tools.upstream_bump import manifest_pin
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -142,37 +142,24 @@ class GeneratedSourceTests(unittest.TestCase):
 
 
 class LockManifestConsistencyTests(unittest.TestCase):
-    # A Fedora `sources` manifest pins each file in the BSD form
-    # (`SHA512 (file) = <hex>`, any hash algorithm) or, in older recipes, the
-    # legacy md5sum form (`<32 hex>  file`). Match both so the consistency
-    # check covers every pinned file instead of silently skipping the ten
-    # md5-pinned recipes that only the SHA512 line matched before #393.
-    MANIFEST_LINE = re.compile(
-        r"(?P<algo>[A-Za-z][A-Za-z0-9]*) \((?P<bsd_file>\S+)\) = (?P<bsd_hash>[0-9a-fA-F]+)"
-        r"|(?P<md5_hash>[0-9a-fA-F]{32}) [ *](?P<md5_file>\S+)"
-    )
+    # Recipes whose manifest pin uses an algorithm the lock records no digest
+    # for. Empty: every md5-pinned recipe carries an `md5` lock field (#393).
+    # A new entry here must name why its pin cannot be compared.
+    MISSING_ALGORITHM_ALLOWED: frozenset[str] = frozenset()
 
     def manifest_pins(self, text: str) -> dict[str, tuple[str, str]]:
         """Map each pinned filename to its (algorithm, digest) from a manifest.
 
-        Both manifest forms are parsed and the algorithm is threaded through so
-        a pin is compared against the lock digest recorded under the same
-        algorithm. Malformed lines are ignored, as before.
+        Parsing is shared with tools/upstream_bump.py (manifest_pin), which
+        reads both the BSD form (`SHA512 (file) = <hex>`, any algorithm) and
+        the legacy md5sum form (`<32 hex>  file`). Malformed lines are ignored.
         """
         pins: dict[str, tuple[str, str]] = {}
         for line in text.splitlines():
-            match = self.MANIFEST_LINE.fullmatch(line.strip())
-            if not match:
-                continue
-            if match.group("bsd_file") is not None:
-                algorithm = match.group("algo").lower()
-                filename = match.group("bsd_file")
-                digest = match.group("bsd_hash").lower()
-            else:
-                algorithm = "md5"
-                filename = match.group("md5_file")
-                digest = match.group("md5_hash").lower()
-            pins[filename] = (algorithm, digest)
+            pin = manifest_pin(line)
+            if pin is not None:
+                filename, algorithm, digest = pin
+                pins[filename] = (algorithm, digest)
         return pins
 
     def test_manifest_pins_parses_legacy_md5_lines(self):
@@ -199,6 +186,7 @@ class LockManifestConsistencyTests(unittest.TestCase):
     def test_lock_hash_matches_manifest_pin_when_pinned(self):
         config = json.loads(CONFIG.read_text())
         mismatched = []
+        unchecked: list[tuple[str, str]] = []
         for entry in config["packages"]:
             manifest = ROOT / "packages" / entry.get("dist_git_name", entry["name"]) / "sources"
             if not manifest.is_file():
@@ -210,15 +198,24 @@ class LockManifestConsistencyTests(unittest.TestCase):
             algorithm, digest = pins[filename]
             lock_digest = entry.get(algorithm)
             if lock_digest is None:
-                # The lock records no digest for this pin's algorithm (for
-                # example an md5-pinned recipe whose lock only carries sha512,
-                # or a stale md5 line whose filename is not the locked file),
-                # so there is nothing to compare against. Skip explicitly
-                # rather than letting the pin vanish as it did before #393.
+                # Nothing to compare against: report it rather than letting
+                # the pin go unchecked, unless explicitly allowlisted.
+                unchecked.append((entry["name"], algorithm))
                 continue
             if digest != lock_digest.lower():
                 mismatched.append(entry["name"])
         self.assertEqual(mismatched, [])
+        self.assertEqual(
+            [item for item in unchecked if item[0] not in self.MISSING_ALGORITHM_ALLOWED],
+            [],
+            "lock entries lack a digest for their manifest pin's algorithm; "
+            "add the field to config/upstream-sources.json",
+        )
+        self.assertEqual(
+            sorted(self.MISSING_ALGORITHM_ALLOWED - {name for name, _ in unchecked}),
+            [],
+            "stale MISSING_ALGORITHM_ALLOWED entries",
+        )
 
 
 if __name__ == "__main__":
