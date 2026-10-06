@@ -29,6 +29,20 @@ saturation #304 is about. The numbers come from the GitHub Actions API
 (`GET .../actions/workflows/{id}/runs` and `.../runs/{id}/jobs`), never from
 anything a workflow prints.
 
+The report also carries a **per-job** view (`per_job`): each started job's own
+`started_at` minus its `created_at` (when the job was queued), with overall
+p50/p90/max and a `by_runner_pool` breakdown keyed by the job's sorted
+`runs-on` labels (falling back to its runner group, then `unknown`). Runner ids
+are ephemeral on hosted runners, so pools — not runners — are the unit. The
+step summary (rendered by `tools/queue_wait.py --render-summary`) prints the
+per-job percentiles and names the pool with the longest single wait.
+
+**Coverage boundary:** the daily job measures `rebuild-rpms.yml` runs that were
+triggered directly (schedule, dispatch, push). Canary calls `rebuild-rpms.yml`
+via `workflow_call`, and the Actions API attributes those runs to `canary.yml`,
+so canary-driven rebuilds are not in the report. Pass `--workflow canary.yml`
+too if they need measuring.
+
 Semantics worth pinning (they are unit-tested in `tests/test_queue_wait.py`):
 
 - Only jobs that actually started count. Skipped/never-queued jobs have no

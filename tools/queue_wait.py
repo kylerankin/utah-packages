@@ -102,8 +102,8 @@ def queue_wait_seconds(run: dict, jobs: list[dict] | None) -> float | None:
 def job_wait_seconds(job: dict) -> float | None:
     """Queue wait for one job: its own ``created_at`` to ``started_at``.
 
-    A job's ``created_at`` is when the scheduler placed it on a runner; its
-    ``started_at`` is when it actually began. The gap is how long that specific
+    A job's ``created_at`` is when its record was created and it was queued; its
+    ``started_at`` is when a runner picked it up. The gap is how long that specific
     job waited for a runner -- the per-runner-pool view of saturation that a run-level
     number hides when one run fans out across many jobs. Returns ``None`` when
     either timestamp is missing (a job that never scheduled), which callers skip.
@@ -196,6 +196,59 @@ def summarize(
         "per_job": _per_job_summary(per_job or []),
         "threshold_exceeded": overall_summary["threshold_exceeded"],
     }
+
+
+def render_step_summary(report: dict) -> str:
+    """Render the workflow step-summary markdown for a :func:`summarize` report.
+
+    Lives here rather than inline in the workflow so the keys it reads are
+    unit-tested against the keys :func:`summarize` writes.
+    """
+    lines: list[str] = []
+    overall = report["overall"]
+    lines.append("## CI queue wait — " + report["measured_at"])
+    lines.append("")
+    lines.append(f"Runs measured: **{overall['runs_measured']}** / observed {report['runs_observed']}")
+    lines.append(
+        f"p50: **{overall['p50_seconds'] / 60:.1f} min**"
+        f" · p90: **{overall['p90_seconds'] / 60:.1f} min**"
+        f" · max: **{overall['max_seconds'] / 60:.1f} min**"
+    )
+    worst = overall.get("worst")
+    if worst:
+        lines.append(
+            f"Worst: run #{worst['run_number']} ({worst['head_branch']}) — "
+            f"{worst['wait_seconds'] / 60:.1f} min, {worst['conclusion']}"
+        )
+    per_job = report.get("per_job", {})
+    if per_job.get("jobs_measured"):
+        lines.append(
+            f"Per-job (per runner pool): p50 **{per_job['p50_seconds'] / 60:.1f} min**"
+            f" · p90 **{per_job['p90_seconds'] / 60:.1f} min** · max **{per_job['max_seconds'] / 60:.1f} min**"
+        )
+        # Name the runner pool (runs-on label set) that waited longest: the
+        # saturation signal a run-level number hides when one run fans out.
+        by_pool = per_job.get("by_runner_pool", {})
+        if by_pool:
+            pool, stats = max(by_pool.items(), key=lambda kv: kv[1]["max_seconds"])
+            lines.append(
+                f"Worst runner pool `{pool}`: {stats['jobs']} jobs, "
+                f"max {stats['max_seconds'] / 60:.1f} min wait."
+            )
+    if overall.get("threshold_exceeded"):
+        lines.append("")
+        lines.append(
+            ":rotating_light: p50 queue wait exceeds the "
+            f"{overall['threshold_seconds'] / 60:.0f} min threshold (issue #304)."
+        )
+    else:
+        threshold = overall.get("threshold_seconds")
+        lines.append("")
+        if threshold:
+            lines.append(f"Within the {threshold / 60:.0f} min threshold.")
+        else:
+            lines.append("No threshold set (set QUEUE_WAIT_THRESHOLD to alert).")
+    return "\n".join(lines) + "\n"
 
 
 def runner_pool(job: dict) -> str:
@@ -392,7 +445,18 @@ def main() -> int:
     )
     parser.add_argument("--output", type=Path, default=None, help="Write the JSON report here in addition to stdout.")
     parser.add_argument("--token", default=os.environ.get("GITHUB_TOKEN", ""), help="GitHub token with actions: read.")
+    parser.add_argument(
+        "--render-summary",
+        type=Path,
+        default=None,
+        metavar="REPORT",
+        help="Print the step-summary markdown for an existing JSON report and exit (no API calls).",
+    )
     args = parser.parse_args()
+
+    if args.render_summary:
+        sys.stdout.write(render_step_summary(json.loads(args.render_summary.read_text())))
+        return 0
 
     workflows = args.workflow or ["rebuild-rpms.yml"]
     if not args.token:

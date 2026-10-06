@@ -294,6 +294,50 @@ class PerJobSummaryTests(unittest.TestCase):
         self.assertEqual(report["per_job"]["jobs_measured"], 1)
 
 
+class RenderStepSummaryTests(unittest.TestCase):
+    def test_names_worst_runner_pool_from_summarize_output(self):
+        # Pins the summary to the key summarize() actually writes
+        # (by_runner_pool); a renamed key would silently drop this line.
+        per_job = [
+            {"runner_pool": "ubuntu-24.04", "wait_seconds": 60.0},
+            {"runner_pool": "ubuntu-24.04", "wait_seconds": 120.0},
+            {"runner_pool": "ubuntu-24.04-arm", "wait_seconds": 600.0},
+        ]
+        waits = [{"workflow": "wf.yml", "run_number": 7, "head_branch": "main",
+                  "conclusion": "success", "wait_seconds": 300.0}]
+        text = qw.render_step_summary(qw.summarize(waits, per_job=per_job))
+        self.assertIn("Per-job (per runner pool)", text)
+        self.assertIn("Worst runner pool `ubuntu-24.04-arm`: 1 jobs, max 10.0 min wait.", text)
+        self.assertIn("Worst: run #7 (main)", text)
+        self.assertIn("No threshold set", text)
+
+    def test_no_jobs_omits_per_job_lines(self):
+        text = qw.render_step_summary(qw.summarize([], per_job=[]))
+        self.assertNotIn("Per-job", text)
+        self.assertNotIn("Worst runner pool", text)
+
+    def test_threshold_exceeded_alerts(self):
+        waits = [{"workflow": "wf.yml", "run_number": 1, "head_branch": "main",
+                  "conclusion": "success", "wait_seconds": 3600.0}]
+        text = qw.render_step_summary(qw.summarize(waits, threshold_seconds=1800.0))
+        self.assertIn(":rotating_light:", text)
+        self.assertIn("30 min threshold", text)
+
+    def test_cli_renders_without_token(self):
+        import tempfile
+        from pathlib import Path
+        report = qw.summarize([], per_job=[{"runner_pool": "p", "wait_seconds": 60.0}])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "r.json"
+            path.write_text(json.dumps(report))
+            with patch("sys.argv", ["queue_wait.py", "--render-summary", str(path)]), \
+                 patch.dict("os.environ", {"GITHUB_TOKEN": ""}), \
+                 patch("sys.stdout") as out:
+                self.assertEqual(qw.main(), 0)
+        written = "".join(call.args[0] for call in out.write.call_args_list)
+        self.assertIn("Worst runner pool `p`", written)
+
+
 class RunnerPoolTests(unittest.TestCase):
     def test_labels_name_the_pool_order_independent(self):
         self.assertEqual(
