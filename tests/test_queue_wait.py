@@ -268,32 +268,84 @@ class PerJobSummaryTests(unittest.TestCase):
     def test_empty_per_job_is_zeroed(self):
         report = qw.summarize([], per_job=[])
         self.assertEqual(report["per_job"]["jobs_measured"], 0)
-        self.assertEqual(report["per_job"]["by_runner"], {})
+        self.assertEqual(report["per_job"]["by_runner_pool"], {})
 
-    def test_buckets_by_runner(self):
+    def test_buckets_by_runner_pool_not_ephemeral_runner_id(self):
+        # Ephemeral hosted runners give every job a fresh runner_id; jobs that
+        # share runs-on labels must still land in one pool bucket.
         per_job = [
-            {"runner_id": 1, "wait_seconds": 100.0},
-            {"runner_id": 1, "wait_seconds": 300.0},
-            {"runner_id": 2, "wait_seconds": 600.0},
+            {"runner_pool": "ubuntu-24.04", "runner_id": 1, "wait_seconds": 100.0},
+            {"runner_pool": "ubuntu-24.04", "runner_id": 2, "wait_seconds": 300.0},
+            {"runner_pool": "ubuntu-24.04-arm", "runner_id": 3, "wait_seconds": 600.0},
         ]
         report = qw.summarize([], per_job=per_job)
         pj = report["per_job"]
         self.assertEqual(pj["jobs_measured"], 3)
-        self.assertEqual(pj["by_runner"]["1"]["jobs"], 2)
-        self.assertEqual(pj["by_runner"]["2"]["jobs"], 1)
-        # p90 over [100, 300, 600] is dominated by the 600 on runner 2.
-        self.assertEqual(pj["by_runner"]["2"]["max_seconds"], 600.0)
+        self.assertEqual(set(pj["by_runner_pool"]), {"ubuntu-24.04", "ubuntu-24.04-arm"})
+        self.assertEqual(pj["by_runner_pool"]["ubuntu-24.04"]["jobs"], 2)
+        self.assertEqual(pj["by_runner_pool"]["ubuntu-24.04-arm"]["max_seconds"], 600.0)
 
     def test_none_waits_are_excluded(self):
         per_job = [
-            {"runner_id": 1, "wait_seconds": 100.0},
-            {"runner_id": 1, "wait_seconds": None},
+            {"runner_pool": "ubuntu-24.04", "wait_seconds": 100.0},
+            {"runner_pool": "ubuntu-24.04", "wait_seconds": None},
         ]
         report = qw.summarize([], per_job=per_job)
         self.assertEqual(report["per_job"]["jobs_measured"], 1)
 
 
+class RunnerPoolTests(unittest.TestCase):
+    def test_labels_name_the_pool_order_independent(self):
+        self.assertEqual(
+            qw.runner_pool({"labels": ["x64", "self-hosted"], "runner_group_name": "Default"}),
+            "self-hosted,x64",
+        )
+
+    def test_falls_back_to_group_then_unknown(self):
+        self.assertEqual(qw.runner_pool({"labels": [], "runner_group_name": "GitHub Actions"}), "GitHub Actions")
+        self.assertEqual(qw.runner_pool({}), "unknown")
+
+
 class FetchJobsTests(unittest.TestCase):
+    def _serve(self, pages, total):
+        captured = []
+
+        class _Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_a):
+                return False
+
+            def read(self):
+                params = dict(p.split("=") for p in captured[-1].split("?")[1].split("&"))
+                ids = pages.get(int(params["page"]), [])
+                return json.dumps({"total_count": total, "jobs": [{"id": i} for i in ids]}).encode()
+
+        def _capture(request, *_, **__):
+            captured.append(request.get_full_url())
+            return _Resp()
+
+        return captured, _capture
+
+    def test_paginates_until_total_count(self):
+        # A rebuild run with more jobs than one page: later pages must not be
+        # silently dropped, and no request is made past total_count.
+        pages = {1: list(range(100)), 2: list(range(100, 200)), 3: list(range(200, 234))}
+        captured, side_effect = self._serve(pages, total=234)
+        with patch.object(qw.urllib.request, "urlopen", side_effect=side_effect):
+            jobs = qw.fetch_jobs("tok", "o", "r", 1)
+        self.assertEqual(len(jobs), 234)
+        self.assertEqual(len(captured), 3)
+        self.assertIn("page=3", captured[2])
+
+    def test_stops_on_empty_page_even_if_total_overstates(self):
+        captured, side_effect = self._serve({1: [1, 2]}, total=5)
+        with patch.object(qw.urllib.request, "urlopen", side_effect=side_effect):
+            jobs = qw.fetch_jobs("tok", "o", "r", 1)
+        self.assertEqual([j["id"] for j in jobs], [1, 2])
+        self.assertEqual(len(captured), 2)
+
     def test_404_yields_no_jobs(self):
         def _raise(*_args, **_kwargs):
             raise urllib.error.HTTPError("url", 404, "Not Found", {}, None)

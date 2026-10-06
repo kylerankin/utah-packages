@@ -8,24 +8,30 @@ wave. The evidence was captured by hand while shepherding a bump; the point
 of this tool is to make it a number we can watch instead of a story we tell
 after the fact.
 
-"Queue wait" is the time between a run being created and its first job
-actually starting to run -- the ``created_at`` of the run minus the earliest
-``started_at`` among its jobs. That is the wall-clock time a contributor
-spent waiting, which is exactly the saturation this issue is about.
+"Queue wait" is the time between a run (attempt) starting and its first job
+actually running -- the earliest ``started_at`` among its jobs minus the run's
+``run_started_at`` (falling back to ``created_at`` when the run record carries
+none). ``run_started_at`` is used rather than ``created_at`` because the jobs
+endpoint returns the latest attempt, so a re-run is measured from when that
+attempt started. That is the wall-clock time a contributor spent waiting,
+which is exactly the saturation this issue is about.
 
 The GitHub Actions API is the source of truth for both timestamps, so this
 tool reads runs and their jobs rather than trusting anything a workflow prints.
 The network calls live in :func:`measure`; the parsing, percentile and
 threshold logic is pure and unit-tested here.
 
-Saturation also shows up per runner: one run can fan out across many jobs that
-each wait their own stretch for a runner before starting. :func:`job_wait_seconds`
-captures that per-job view, and :func:`measure` returns it alongside the run-level
-record so :func:`summarize` can bucket it by runner.
+Saturation also shows up per runner pool: one run can fan out across many jobs
+that each wait their own stretch for a runner before starting.
+:func:`job_wait_seconds` captures that per-job view, and :func:`measure` returns
+it alongside the run-level record so :func:`summarize` can bucket it by runner
+pool (the job's ``runs-on`` labels, falling back to its runner group).
+GitHub-hosted runners are ephemeral -- nearly every job gets a fresh
+``runner_id`` -- so bucketing by runner id would just restate each job.
 
-A rebuild wave can exceed the Actions page size, so :func:`fetch_runs` paginates
-until it has collected the requested number of runs instead of trusting a
-single page.
+A rebuild wave can exceed the Actions page size, so both :func:`fetch_runs` and
+:func:`fetch_jobs` paginate instead of trusting a single page; a large rebuild
+run has hundreds of jobs, and the later stages are where long poles queue.
 """
 from __future__ import annotations
 
@@ -42,9 +48,9 @@ from pathlib import Path
 DEFAULT_OWNER = "projectbluefin"
 DEFAULT_REPO = "utah-packages"
 
-# GitHub pages a run list at 100 items per page. Kept as a constant so the
-# request shape is assertable; pagination in :func:`fetch_runs` walks pages of
-# this size until the requested run count is reached.
+# GitHub pages run and job lists at 100 items per page. Kept as a constant so
+# the request shape is assertable; :func:`fetch_runs` and :func:`fetch_jobs`
+# walk pages of this size.
 PER_PAGE = 100
 
 
@@ -98,7 +104,7 @@ def job_wait_seconds(job: dict) -> float | None:
 
     A job's ``created_at`` is when the scheduler placed it on a runner; its
     ``started_at`` is when it actually began. The gap is how long that specific
-    job waited for a runner -- the per-runner view of saturation that a run-level
+    job waited for a runner -- the per-runner-pool view of saturation that a run-level
     number hides when one run fans out across many jobs. Returns ``None`` when
     either timestamp is missing (a job that never scheduled), which callers skip.
     """
@@ -170,7 +176,7 @@ def summarize(
     ``head_branch``, ``conclusion`` and ``wait_seconds``. ``wait_seconds`` may be
     ``None`` when the run never started a job; those are counted as observed but
     excluded from the percentile math. ``per_job`` is an optional list of
-    per-job records (see :func:`measure`) bucketed by runner.
+    per-job records (see :func:`measure`) bucketed by runner pool.
     """
     measured = [w for w in waits if w["wait_seconds"] is not None]
     per_workflow: dict[str, list[dict]] = {}
@@ -192,31 +198,46 @@ def summarize(
     }
 
 
-def _per_job_summary(per_job: list[dict]) -> dict:
-    """Summarise per-job waits grouped by runner, so a saturated runner stands out.
+def runner_pool(job: dict) -> str:
+    """Name the runner pool a job waited on: its ``runs-on`` labels, else its group.
 
-    Each entry in ``per_job`` carries a ``runner_id`` and its own
-    ``wait_seconds``. A run with no measured jobs yields an empty report rather
-    than an error, so the scheduled job still produces output on quiet days.
+    Runner ids are ephemeral on GitHub-hosted runners, so they cannot identify a
+    saturated pool. The labels (``ubuntu-24.04``, ``self-hosted,x64``...) are what
+    jobs actually compete for; the runner group is the fallback, then
+    ``unknown`` for a job the API reports neither for.
+    """
+    labels = [str(label) for label in (job.get("labels") or []) if label]
+    if labels:
+        return ",".join(sorted(labels))
+    return job.get("runner_group_name") or "unknown"
+
+
+def _per_job_summary(per_job: list[dict]) -> dict:
+    """Summarise per-job waits grouped by runner pool, so a saturated pool stands out.
+
+    Each entry in ``per_job`` carries a ``runner_pool`` (see :func:`runner_pool`)
+    and its own ``wait_seconds``. A run with no measured jobs yields an empty
+    report rather than an error, so the scheduled job still produces output on
+    quiet days.
     """
     seconds = [j["wait_seconds"] for j in per_job if j["wait_seconds"] is not None]
-    by_runner: dict[str, list[float]] = {}
+    by_pool: dict[str, list[float]] = {}
     for job in per_job:
         if job.get("wait_seconds") is not None:
-            by_runner.setdefault(str(job.get("runner_id")), []).append(job["wait_seconds"])
+            by_pool.setdefault(job.get("runner_pool") or "unknown", []).append(job["wait_seconds"])
     return {
         "jobs_measured": len(seconds),
         "p50_seconds": percentile(seconds, 50),
         "p90_seconds": percentile(seconds, 90),
         "max_seconds": max(seconds) if seconds else 0.0,
-        "by_runner": {
-            runner: {
+        "by_runner_pool": {
+            pool: {
                 "jobs": len(values),
                 "p50_seconds": percentile(values, 50),
                 "p90_seconds": percentile(values, 90),
                 "max_seconds": max(values) if values else 0.0,
             }
-            for runner, values in sorted(by_runner.items())
+            for pool, values in sorted(by_pool.items())
         },
     }
 
@@ -274,21 +295,37 @@ def fetch_runs(
 
 
 def fetch_jobs(token: str, owner: str, repo: str, run_id: int) -> list[dict]:
-    """Fetch the jobs of one run. Empty list if the run has none."""
-    url = (
-        f"https://api.github.com/repos/{owner}/{repo}"
-        f"/actions/runs/{run_id}/jobs?per_page={PER_PAGE}"
-    )
-    try:
-        payload = _http_get_json(url, token)
-    except urllib.error.HTTPError as error:
-        # A run that finished before its jobs were retained, or a run the token
-        # cannot read, yields no jobs. Treat that as an unmeasurable run, not a
-        # fatal error, so one bad run does not sink the whole report.
-        if error.code == 404:
-            return []
-        raise
-    return payload.get("jobs", [])
+    """Fetch every job of one run. Empty list if the run has none.
+
+    A rebuild run can have hundreds of jobs, so paginate until ``total_count``
+    jobs are collected (or the API returns an empty page) rather than silently
+    keeping only the first page -- the later stages are where long poles queue.
+    """
+    jobs: list[dict] = []
+    page = 1
+    while True:
+        url = (
+            f"https://api.github.com/repos/{owner}/{repo}"
+            f"/actions/runs/{run_id}/jobs?per_page={PER_PAGE}&page={page}"
+        )
+        try:
+            payload = _http_get_json(url, token)
+        except urllib.error.HTTPError as error:
+            # A run that finished before its jobs were retained, or a run the
+            # token cannot read, yields no jobs. Treat that as an unmeasurable
+            # run, not a fatal error, so one bad run does not sink the report.
+            if error.code == 404:
+                return []
+            raise
+        batch = payload.get("jobs", [])
+        if not batch:
+            break
+        jobs.extend(batch)
+        total = payload.get("total_count")
+        if total is None or len(jobs) >= total:
+            break
+        page += 1
+    return jobs
 
 
 def measure(
@@ -303,8 +340,8 @@ def measure(
     ``workflow_ids`` may be workflow filenames (``rebuild-rpms.yml``) or numeric
     IDs; the API accepts both. The first return value is one record per
     completed run with the fields :func:`summarize` needs. The second is one
-    record per job that actually started, carrying its ``runner_id`` and its
-    own queue wait, so saturation can be viewed per runner as well as per run.
+    record per job that actually started, carrying its runner pool and its
+    own queue wait, so saturation can be viewed per runner pool as well as per run.
     """
     records: list[dict] = []
     per_job: list[dict] = []
@@ -324,6 +361,7 @@ def measure(
                 jwait = job_wait_seconds(job)
                 if jwait is not None:
                     per_job.append({
+                        "runner_pool": runner_pool(job),
                         "runner_id": job.get("runner_id"),
                         "wait_seconds": jwait,
                         "job_name": job.get("name"),
