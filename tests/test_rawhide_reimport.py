@@ -62,12 +62,21 @@ def classify(local_tree=None, pinned=None, target=None, *, lock=LOCK, provenance
     pinned = tree() if pinned is None else pinned
     return reimport.classify(
         "demo", provenance, lock, local(pinned) if local_tree is None else local_tree,
-        pinned, target if target is not None else tree(SPEC.replace("%autorelease", "2%{?dist}")),
+        pinned, target if target is not None else tree(SPEC),
         fast_forward=fast_forward,
     )
 
 
 class ClassifierTests(unittest.TestCase):
+    def test_release_move_blocks(self) -> None:
+        # A literal -> %autorelease (or any) Release move rewrites the disttag
+        # without a Version bump and can downgrade the build: libnma went
+        # 1.10.6-12 -> 1.10.6-1 and had to be pinned back by hand (92eefdc).
+        # classify() must not import it unattended.
+        pinned = tree(SPEC.replace("%autorelease", "12%{?dist}"))
+        reasons = classify(pinned=pinned, target=tree(SPEC))
+        self.assertIn("Release: changed ['12%{?dist}'] -> ['%autorelease']", reasons)
+
     def test_release_only_move_on_a_clean_recipe_is_safe(self) -> None:
         self.assertEqual(classify(), [])
 

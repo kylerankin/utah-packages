@@ -17,6 +17,9 @@ whether it may be taken without a human:
 * Fedora's ``sources`` file, ``Name:``, ``Epoch:`` and ``Version:`` are
   unchanged, so the SHA-512 source lock in ``config/upstream-sources.json``
   still describes the payload byte for byte and needs no rewrite;
+* the ``Release:`` line is unchanged too: a literal ``12`` -> ``%autorelease``
+  transition rewrites the disttag from 12 to 1 and downgrades the build (the
+  libnma case, reverted by hand in ``92eefdc``), so it belongs to a human.
 * the new spec adds no ``BuildRequires`` (or ``%generate_buildrequires``),
   so the build graph and the hermetic build root cannot grow a dependency the
   factory has never resolved;
@@ -226,7 +229,7 @@ def classify(name: str, provenance: dict, lock: dict | None, local: Tree,
         reasons.append(f"spec renamed {old[0]} -> {new[0]}")
     if pinned.get("sources") != target.get("sources"):
         reasons.append("Fedora changed `sources`: the source lock would have to move")
-    for field in ("Name", "Epoch", "Version"):
+    for field in ("Name", "Epoch", "Version", "Release"):
         before, after = field_lines(old[1], field), field_lines(new[1], field)
         if before != after:
             reasons.append(f"{field}: changed {before} -> {after}")
