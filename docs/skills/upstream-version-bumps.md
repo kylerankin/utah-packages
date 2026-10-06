@@ -58,6 +58,19 @@ reads, directly or through another macro (alsa-sof-firmware's
 `%{version}` (pipewire, alsa-utils) is still overwritten with a literal. Both
 refusals are skipped with a reason, like a failed download.
 
+The lock-vs-manifest consistency check (`LockManifestConsistencyTests` in
+`tests/test_source_inventory.py`) has to parse both manifest forms too, or it
+silently skips the legacy-md5 recipes the same way. Before #393 its regex only
+matched `SHA512 (file) = <128hex>` lines, so every md5-pinned recipe fell
+through with no comparison at all — a gap a review flagged (#393). It now
+parses the BSD form (any `ALGO`, algorithm threaded through) and the legacy
+`<32hex>  file` form as `md5`, and compares each pin against the lock digest
+recorded under the same algorithm. Those md5-pinned recipes therefore carry an
+`md5` field in `config/upstream-sources.json` (added #393); a pin whose
+algorithm the lock has no digest for is skipped explicitly rather than
+vanishing. A future "simplify the regex" edit that drops the md5 arm
+reintroduces the silent skip.
+
 ## When a bumped recipe fails
 
 `--apply` moves the version only; the recipe can still need the change a new

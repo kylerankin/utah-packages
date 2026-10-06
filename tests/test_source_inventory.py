@@ -142,6 +142,60 @@ class GeneratedSourceTests(unittest.TestCase):
 
 
 class LockManifestConsistencyTests(unittest.TestCase):
+    # A Fedora `sources` manifest pins each file in the BSD form
+    # (`SHA512 (file) = <hex>`, any hash algorithm) or, in older recipes, the
+    # legacy md5sum form (`<32 hex>  file`). Match both so the consistency
+    # check covers every pinned file instead of silently skipping the ten
+    # md5-pinned recipes that only the SHA512 line matched before #393.
+    MANIFEST_LINE = re.compile(
+        r"(?P<algo>[A-Za-z][A-Za-z0-9]*) \((?P<bsd_file>\S+)\) = (?P<bsd_hash>[0-9a-fA-F]+)"
+        r"|(?P<md5_hash>[0-9a-fA-F]{32}) [ *](?P<md5_file>\S+)"
+    )
+
+    def manifest_pins(self, text: str) -> dict[str, tuple[str, str]]:
+        """Map each pinned filename to its (algorithm, digest) from a manifest.
+
+        Both manifest forms are parsed and the algorithm is threaded through so
+        a pin is compared against the lock digest recorded under the same
+        algorithm. Malformed lines are ignored, as before.
+        """
+        pins: dict[str, tuple[str, str]] = {}
+        for line in text.splitlines():
+            match = self.MANIFEST_LINE.fullmatch(line.strip())
+            if not match:
+                continue
+            if match.group("bsd_file") is not None:
+                algorithm = match.group("algo").lower()
+                filename = match.group("bsd_file")
+                digest = match.group("bsd_hash").lower()
+            else:
+                algorithm = "md5"
+                filename = match.group("md5_file")
+                digest = match.group("md5_hash").lower()
+            pins[filename] = (algorithm, digest)
+        return pins
+
+    def test_manifest_pins_parses_legacy_md5_lines(self):
+        pins = self.manifest_pins(
+            "b304bbe8ab63373924a744eac9ebc652  cdparanoia-III-10.2.src.tgz\n"
+        )
+        self.assertEqual(
+            pins,
+            {"cdparanoia-III-10.2.src.tgz": ("md5", "b304bbe8ab63373924a744eac9ebc652")},
+        )
+
+    def test_manifest_pins_handles_a_mixed_manifest(self):
+        text = (
+            "SHA512 (a.tar.xz) = " + "a" * 128 + "\n"
+            "b304bbe8ab63373924a744eac9ebc652  b.tar.gz\n"
+        )
+        pins = self.manifest_pins(text)
+        self.assertEqual(pins["a.tar.xz"], ("sha512", "a" * 128))
+        self.assertEqual(
+            pins["b.tar.gz"],
+            ("md5", "b304bbe8ab63373924a744eac9ebc652"),
+        )
+
     def test_lock_hash_matches_manifest_pin_when_pinned(self):
         config = json.loads(CONFIG.read_text())
         mismatched = []
@@ -149,11 +203,20 @@ class LockManifestConsistencyTests(unittest.TestCase):
             manifest = ROOT / "packages" / entry.get("dist_git_name", entry["name"]) / "sources"
             if not manifest.is_file():
                 continue
-            pins = dict(
-                re.findall(r"SHA512 \((\S+)\) = ([0-9a-f]{128})", manifest.read_text())
-            )
+            pins = self.manifest_pins(manifest.read_text())
             filename = entry.get("filename", "")
-            if filename in pins and pins[filename] != entry["sha512"].lower():
+            if filename not in pins:
+                continue
+            algorithm, digest = pins[filename]
+            lock_digest = entry.get(algorithm)
+            if lock_digest is None:
+                # The lock records no digest for this pin's algorithm (for
+                # example an md5-pinned recipe whose lock only carries sha512,
+                # or a stale md5 line whose filename is not the locked file),
+                # so there is nothing to compare against. Skip explicitly
+                # rather than letting the pin vanish as it did before #393.
+                continue
+            if digest != lock_digest.lower():
                 mismatched.append(entry["name"])
         self.assertEqual(mismatched, [])
 

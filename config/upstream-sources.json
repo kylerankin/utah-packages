@@ -290,7 +290,8 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/cdparanoia/cdparanoia-III-10.2.src.tgz/md5/b304bbe8ab63373924a744eac9ebc652/cdparanoia-III-10.2.src.tgz",
       "filename": "cdparanoia-III-10.2.src.tgz",
       "feed": "https://release-monitoring.org/project/15309",
-      "sha512": "4ab0a0f5ef44d56c1af72d1fc1035566a1a89c4eeddb9e8baea675fe51c06138d913342afc8bed167d9fa55672fa25a2763ce21f7e24c1232e4739aff20733a7"
+      "sha512": "4ab0a0f5ef44d56c1af72d1fc1035566a1a89c4eeddb9e8baea675fe51c06138d913342afc8bed167d9fa55672fa25a2763ce21f7e24c1232e4739aff20733a7",
+      "md5": "b304bbe8ab63373924a744eac9ebc652"
     },
     {
       "name": "codec2",
@@ -1061,7 +1062,8 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/hyphen/hyphen-2.8.8.tar.gz/md5/5ade6ae2a99bc1e9e57031ca88d36dad/hyphen-2.8.8.tar.gz",
       "filename": "hyphen-2.8.8.tar.gz",
       "feed": "https://release-monitoring.org/project/229523",
-      "sha512": "ee514952be56869840b70fb74f60eba14dc4de246733ff8705492367e8cf00c485f8778a9d5a7ba374c988d4ac9fedbe75826dc559e1b62465dbfba21f6ce7de"
+      "sha512": "ee514952be56869840b70fb74f60eba14dc4de246733ff8705492367e8cf00c485f8778a9d5a7ba374c988d4ac9fedbe75826dc559e1b62465dbfba21f6ce7de",
+      "md5": "5ade6ae2a99bc1e9e57031ca88d36dad"
     },
     {
       "name": "i2c-tools",
@@ -1416,7 +1418,8 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libasyncns/libasyncns-0.8.tar.gz/md5/1f553d6ce1ad255bc83b3d8e9384f515/libasyncns-0.8.tar.gz",
       "filename": "libasyncns-0.8.tar.gz",
       "feed": "https://release-monitoring.org/project/14598",
-      "sha512": "2daad3a2d9eb875e0575843d9e9e2787be6cbba89211fd073fa8898ff80e0a891c7da1a7b0ef70f306318cb3a963ecd65d53d24d08b5f6b98e7cd2a3b3bdcda7"
+      "sha512": "2daad3a2d9eb875e0575843d9e9e2787be6cbba89211fd073fa8898ff80e0a891c7da1a7b0ef70f306318cb3a963ecd65d53d24d08b5f6b98e7cd2a3b3bdcda7",
+      "md5": "1f553d6ce1ad255bc83b3d8e9384f515"
     },
     {
       "name": "libatasmart",
@@ -1424,7 +1427,8 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libatasmart/libatasmart-0.19.tar.xz/53afe2b155c36f658e121fe6def33e77/libatasmart-0.19.tar.xz",
       "filename": "libatasmart-0.19.tar.xz",
       "feed": "https://release-monitoring.org/project/14599",
-      "sha512": "ec9edb019c477873b01289ba365ad0ed0946505d651c1f6f83a63ef61b3976a5db6439c8a0c74d9a55325db9a3a587ad6f655f8d1af9387b0d08356eccabdb62"
+      "sha512": "ec9edb019c477873b01289ba365ad0ed0946505d651c1f6f83a63ef61b3976a5db6439c8a0c74d9a55325db9a3a587ad6f655f8d1af9387b0d08356eccabdb62",
+      "md5": "53afe2b155c36f658e121fe6def33e77"
     },
     {
       "name": "libayatana-appindicator",
@@ -1495,7 +1499,8 @@
       "url": "http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz",
       "filename": "libcanberra-0.30.tar.xz",
       "feed": "https://release-monitoring.org/project/13298",
-      "sha512": "f7543582122256826cd01d0f5673e1e58d979941a93906400182305463d6166855cb51f35c56d807a56dc20b7a64f7ce4391368d24990c1b70782a7d0b4429c2"
+      "sha512": "f7543582122256826cd01d0f5673e1e58d979941a93906400182305463d6166855cb51f35c56d807a56dc20b7a64f7ce4391368d24990c1b70782a7d0b4429c2",
+      "md5": "34cb7e4430afaf6f447c4ebdb9b42072"
     },
     {
       "name": "libcdio",
@@ -1544,7 +1549,8 @@
       "url": "http://0pointer.de/lennart/projects/libdaemon/libdaemon-0.14.tar.gz",
       "filename": "libdaemon-0.14.tar.gz",
       "feed": "https://release-monitoring.org/project/13299",
-      "sha512": "a96b25c09bd63cc192c1c5f8b5bf34cc6ad0c32d42ac14b520add611423b6ad3d64091a47e0c7ab9a94476a5e645529abccea3ed6b23596567163fba88131ff2"
+      "sha512": "a96b25c09bd63cc192c1c5f8b5bf34cc6ad0c32d42ac14b520add611423b6ad3d64091a47e0c7ab9a94476a5e645529abccea3ed6b23596567163fba88131ff2",
+      "md5": "509dc27107c21bcd9fbf2f95f5669563"
     },
     {
       "name": "libdatrie",
@@ -2025,7 +2031,8 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libtheora/libtheora-1.1.1.tar.xz/md5/9eeabf1ad65b7f41533854a59f7a716d/libtheora-1.1.1.tar.xz",
       "filename": "libtheora-1.1.1.tar.xz",
       "feed": "https://release-monitoring.org/project/11793",
-      "sha512": "032fb60f10ac0074ec87d5f8c586702309edc50dc0d2842d2f9b9c46ebd1500acc399e9309f858f318fff5b8fbe953234db3afb54ed74a03d0f2c6ee8c3ed481"
+      "sha512": "032fb60f10ac0074ec87d5f8c586702309edc50dc0d2842d2f9b9c46ebd1500acc399e9309f858f318fff5b8fbe953234db3afb54ed74a03d0f2c6ee8c3ed481",
+      "md5": "9eeabf1ad65b7f41533854a59f7a716d"
     },
     {
       "name": "libusbmuxd",
@@ -2743,7 +2750,8 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/sound-theme-freedesktop/sound-theme-freedesktop-0.8.tar.bz2/d7387912cfd275282d1ec94483cb2f62/sound-theme-freedesktop-0.8.tar.bz2",
       "filename": "sound-theme-freedesktop-0.8.tar.bz2",
       "feed": "https://release-monitoring.org/project/10152",
-      "sha512": "f08e0414443f3a47bc433a69a7226d2b9383bc7c64e0711e8a605bd761ac69ea052a6db7f0037d88fbf0900efddaae6466ca96391eb71295ee1d0edbd0364621"
+      "sha512": "f08e0414443f3a47bc433a69a7226d2b9383bc7c64e0711e8a605bd761ac69ea052a6db7f0037d88fbf0900efddaae6466ca96391eb71295ee1d0edbd0364621",
+      "md5": "d7387912cfd275282d1ec94483cb2f62"
     },
     {
       "name": "soxr",
@@ -2795,7 +2803,8 @@
       ],
       "filename": "startup-notification-0.12.tar.gz",
       "feed": "https://release-monitoring.org/project/10089",
-      "sha512": "ea1246acdb50dafd9ced9914ec3c8f0d499c0ca3cfd447b43a444c768a6e9ea7135e5c42d9ca0089354698ac235bd86d42f12c70a3a17c9c79f998c07461f7ab"
+      "sha512": "ea1246acdb50dafd9ced9914ec3c8f0d499c0ca3cfd447b43a444c768a6e9ea7135e5c42d9ca0089354698ac235bd86d42f12c70a3a17c9c79f998c07461f7ab",
+      "md5": "2cd77326d4dcaed9a5a23a1232fb38e9"
     },
     {
       "name": "stix-fonts",
