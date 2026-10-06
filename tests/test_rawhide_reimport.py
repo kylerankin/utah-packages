@@ -77,7 +77,7 @@ class ClassifierTests(unittest.TestCase):
         reasons = classify(pinned=pinned, target=tree(SPEC))
         self.assertIn("Release: changed ['12%{?dist}'] -> ['%autorelease']", reasons)
 
-    def test_release_only_move_on_a_clean_recipe_is_safe(self) -> None:
+    def test_unchanged_clean_recipe_is_safe(self) -> None:
         self.assertEqual(classify(), [])
 
     def test_new_patch_and_dropped_build_requires_are_safe(self) -> None:

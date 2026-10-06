@@ -50,6 +50,11 @@ dependants for no change in bytes.
    in `config/upstream-sources.json` still describes the payload. Version
    moves stay with `tools/upstream_bump.py`: Fedora is a recipe feed, not a
    source-update feed.
+   `Release:` must be unchanged too: a literal `12%{?dist}` -> `%autorelease`
+   transition rewrites the disttag from 12 to 1 and downgrades the build (the
+   libnma case, reverted by hand in `92eefdc`). Any `Release:` move, including
+   a plain Fedora rebuild (`12%{?dist}` -> `13%{?dist}`), is reported for a
+   human rather than imported.
 7. No added `BuildRequires` item (literal, unexpanded; a tightened version
    constraint counts as added) and no newly added `%generate_buildrequires`.
 
