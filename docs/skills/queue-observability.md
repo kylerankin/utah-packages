@@ -22,8 +22,8 @@ do.
 
 ## The metric
 
-"Queue wait" is a run's `run_started_at` (falling back to `created_at` when the
-run record carries none) minus the earliest `started_at` among its jobs — the
+"Queue wait" is the earliest actual job `started_at` minus the run attempt's
+`run_started_at` (falling back to `created_at` when the run record carries none) — the
 wall-clock time a run sat pending before its first job ran. That is the
 saturation #304 is about. The numbers come from the GitHub Actions API
 (`GET .../actions/workflows/{id}/runs` and `.../runs/{id}/jobs`), never from
@@ -45,8 +45,9 @@ too if they need measuring.
 
 Semantics worth pinning (they are unit-tested in `tests/test_queue_wait.py`):
 
-- Only jobs that actually started count. Skipped/never-queued jobs have no
-  `started_at` and are ignored.
+- Only jobs that actually ran count. GitHub can populate `started_at` and
+  `created_at` even for skipped jobs; filter `conclusion=skipped` explicitly
+  from both run and per-job measurements. Missing timestamps remain gaps.
 - A run that never started a job (cancelled before start, or whose jobs could
   not be read) is a **measurement gap** reported as `wait_seconds: null`, never
   a zero wait. `runs_observed` counts it; `runs_measured` does not.

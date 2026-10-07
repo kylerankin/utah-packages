@@ -78,6 +78,7 @@ def first_started_at(jobs: list[dict]) -> datetime | None:
     started = [
         ts
         for job in jobs
+        if job.get("conclusion") != "skipped"
         if (ts := parse_timestamp(job.get("started_at"))) is not None
     ]
     return min(started) if started else None
@@ -108,6 +109,8 @@ def job_wait_seconds(job: dict) -> float | None:
     number hides when one run fans out across many jobs. Returns ``None`` when
     either timestamp is missing (a job that never scheduled), which callers skip.
     """
+    if job.get("conclusion") == "skipped":
+        return None
     created = parse_timestamp(job.get("created_at"))
     started = parse_timestamp(job.get("started_at"))
     if created is None or started is None:

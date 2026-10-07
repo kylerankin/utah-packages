@@ -64,6 +64,14 @@ class FirstStartedAtTests(unittest.TestCase):
         self.assertIsNone(qw.first_started_at([]))
         self.assertIsNone(qw.first_started_at([{"started_at": None}]))
 
+    def test_skipped_job_timestamps_do_not_end_the_queue_wait(self):
+        skipped = {"conclusion": "skipped", "created_at": "2026-10-07T03:54:45Z",
+                   "started_at": "2026-10-07T03:54:45Z"}
+        actual = {"started_at": "2026-10-07T03:57:18Z"}
+        self.assertEqual(qw.first_started_at([skipped, actual]).minute, 57)
+        self.assertIsNone(qw.first_started_at([skipped]))
+        self.assertIsNone(qw.job_wait_seconds(skipped))
+
 
 class QueueWaitTests(unittest.TestCase):
     def test_wait_is_started_minus_created(self):
