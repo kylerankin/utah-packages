@@ -1,8 +1,8 @@
 {
   "areas": {
     "codecs-media": {
-      "already_recipe": 8,
-      "pending": 41,
+      "already_recipe": 10,
+      "pending": 39,
       "total": 49
     },
     "dev-tools": {
@@ -97,12 +97,12 @@
     {
       "area": "codecs-media",
       "name": "ffmpegthumbnailer",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "codecs-media",
       "name": "ffmpegthumbnailer-libs",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "codecs-media",
@@ -2812,9 +2812,9 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 26,
+    "already_recipe": 28,
     "manifest_wants": 1,
-    "pending": 524
+    "pending": 522
   },
   "totals": {
     "backlog": 551,
