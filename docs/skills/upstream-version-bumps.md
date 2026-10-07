@@ -130,6 +130,23 @@ Constraints that shaped it, so they are not rediscovered:
   missing output, a bumped package that was not selected, or any failure
   blocks the merge. The diff from main may touch only
   `config/upstream-sources.json`, `config/bump-holds.json` and `packages/**`.
+- Review-only packages never self-merge. A bump pins the SHA-512 of
+  whatever the forge serves, and the gate merges it once it builds, so the
+  forge is the only party vouching for the bytes. `config/bump-review-only.txt`
+  names the packages where that is not enough -- root daemons, the boot
+  chain, firmware (gdm, fprintd, microcode_ctl, tpm2-tools, plymouth, ...).
+  `upstream_bump.py` reports their releases as `needs review` and applies
+  nothing; `bump_gate.py plan` refuses a pull request that moves one of
+  their lock entries, whoever pushed it (a recipe-only change, such as a
+  Rawhide re-import, still passes). Bump them by hand in an ordinary pull
+  request, as in the section above. The list is outside what a bump may
+  commit, so only a reviewed pull request can shorten it, and
+  `tools/validate.py` fails on a name the lock does not carry.
+- ABI holds: `libcdio` stays review-only until gvfs is rebuilt for its new
+  soname. An exact-version entry in `bump-holds.json` blocks only that version;
+  the next release retires it. Use the review-only list when a consumer rebuild
+  is required for every newer release, and remove it only with transaction
+  evidence for the matching consumer.
 - Staleness: the gate works on `github.sha`, the branch head when it was
   dispatched, checks the pull request still points there, and merges with
   `gh pr merge --match-head-commit`. A newer bump's gate cancels an older
@@ -170,6 +187,16 @@ Constraints that shaped it, so they are not rediscovered:
   `action_required`; their pending `Canary` blocked the first gated merge
   ("the base branch policy prohibits the merge"). The merge job approves
   parked runs on the exact commit it built before waiting for Canary.
+- Approving a parked run RESTARTS it, so waiting on the check-runs API
+  after the approval is racy: the completed `Canary` check-run it sees can
+  predate the restart while the merge policy already sees the fresh pending
+  run, and the merge fails the same policy refusal the approval was meant
+  to clear (bump gate run 37418964510 on utah-packages#374). The wait tracks
+  the approved `Canary` run IDs through the runs API instead, whose
+  per-run status cannot go stale; the check-runs query stays only as the
+  final confirmation. Only `Canary`-named runs are tracked: other parked
+  runs are still released, but a non-required check must never gate the
+  merge.
 - A relock (a dispatched `--package` run that moves a primary off the Fedora
   lookaside) changes `config/fedora-primary-sources.txt`, which the gate
   refuses: moving a source's origin stays a human merge.

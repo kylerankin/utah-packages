@@ -500,9 +500,10 @@ pull request.
   host has none. Add the Fedora lookaside as `fallback_urls`, never as `url`.
 - Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
   --write`.
-- Bump the recipe count in the tests listed under *Removing a package* in
-  [`contributing.md`](../contributing.md) and in `docs/architecture.md`,
-  including the quoted `validate.py` output line.
+- Refresh the counts in `docs/architecture.md` with
+  `python3 tools/render_architecture_counts.py --write`; the contract step
+  (`tests/test_architecture_counts.py`) reads the inventory directly, so the
+  four `tests/` files that used to carry the count no longer track it.
 - `just check` green on the import branch, not after merge.
 
 The daily re-import of carried recipes (`tools/rawhide_reimport.py`, the
@@ -512,6 +513,29 @@ touch the source lock (`sources` or `Version:` changed), and fails the run if
 `.packit.yaml` or `config/upstream-sources.json` differ afterwards. It never
 adds a package. Keep it that way; see
 [`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).
+
+## Validate imported metadata without reformatting it
+
+Fedora gating YAML can contain several documents and custom `!Policy` tags.
+Use `check-yaml --unsafe` (syntax-only) specifically for `packages/*/gating.yaml`;
+retain safe loading for all other YAML. Do not edit imported recipe bytes to
+satisfy a single-document or standard-tag assumption. Shell variables populated by Actions `env:` still
+need explicit `${VAR:?}` assertions when a similarly named lowercase variable
+causes shellcheck's SC2153 heuristic. Keep those checks specific rather than
+disabling shellcheck globally. README inventory descriptions should reference
+the live inventory tool instead of freezing another recipe-count snapshot.
+
+## Imported specs must not rewrite trusted proposal tools
+
+`rpmspec` expands executable macros. `persist-credentials: false` and a PR
+`add-paths` list do not make a writable checkout safe: a spec could replace a
+host script which runs later with the write token. The import job therefore
+has `contents: read`, mounts only trusted tools and the selected recipe
+read-only, and gives the container a disposable JSON output directory. A fresh
+proposal job accepts exactly one recipe and source candidate, rejects links,
+then renders configuration with its own trusted checkout. No artifact script
+runs in the write-permission job. Keep these job and filesystem boundaries
+when extending import automation.
 
 ## Quick checks before pushing a fix
 
@@ -532,3 +556,5 @@ adds a package. Keep it that way; see
       a cancelled run and a canary pass?
 - [ ] Is a new recipe source-locked, in `.packit.yaml`, and counted, in
       the same pull request that imports it?
+
+When rebasing a package import, keep the current data-driven inventory assertions rather than replacing them with old hardcoded package counts. Verify the primary archive bytes against both the SHA-512 lock and manifest before a pinned GitHub Actions package build. A passing build proves the recipe; GPU monitoring still needs a separate hardware check.
