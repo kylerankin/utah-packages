@@ -58,8 +58,10 @@ cp -p src/openct/LICENSE LICENSE.openct
 
 
 %preun
-# Upstream Fedora rawhide 8c5a97a carried unit-name typo pcscsd.service (projectbluefin/utah-packages#367)
-%systemd_preun pcscd.service
+# This package is a USB CCID driver; pcscd.service is owned by the pcsc-lite package,
+# not this one. %systemd_preun would stop and disable the shared smartcard daemon on
+# erase ($1 == 0), removing a daemon this package does not manage (projectbluefin/utah-packages#430).
+# pcsc-lite's own scriptlets own the daemon lifecycle.
 
 
 %postun
