@@ -43,6 +43,8 @@ class PreunScriptletTests(unittest.TestCase):
         body = section_body(SPEC.read_text(), "preun")
         # The deliberate no-op is documented so a re-import cannot reintroduce it.
         self.assertIn("pcsc-lite", body)
+        # RPM macro-expands lines in comments; unescaped macro tokens in comments break scriptlets
+        self.assertNotRegex(body, r"^#[^\n]*%(?!%)[a-z_]+")
 
 
 if __name__ == "__main__":

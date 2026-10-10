@@ -59,7 +59,7 @@ cp -p src/openct/LICENSE LICENSE.openct
 
 %preun
 # This package is a USB CCID driver; pcscd.service is owned by the pcsc-lite package,
-# not this one. %systemd_preun would stop and disable the shared smartcard daemon on
+# not this one. %%systemd_preun would stop and disable the shared smartcard daemon on
 # erase ($1 == 0), removing a daemon this package does not manage (projectbluefin/utah-packages#430).
 # pcsc-lite's own scriptlets own the daemon lifecycle.
 
