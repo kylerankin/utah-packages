@@ -644,11 +644,11 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
-    { name = "htop", commit = "" },
-    { name = "nano", commit = "" },
-    { name = "rsync", commit = "" },
-    { name = "tmux", commit = "" },
-    { name = "xdg-utils", commit = "" },
+    { name = "htop", commit = "0000000000000000000000000000000000000000" },
+    { name = "nano", commit = "0000000000000000000000000000000000000000" },
+    { name = "rsync", commit = "0000000000000000000000000000000000000000" },
+    { name = "tmux", commit = "0000000000000000000000000000000000000000" },
+    { name = "xdg-utils", commit = "0000000000000000000000000000000000000000" },
 ]
 
 [wontfix]
