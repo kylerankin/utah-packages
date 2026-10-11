@@ -642,13 +642,14 @@ packages = [
 
 [resolved]
 # Packages that left the backlog because a recipe was imported.
-# Each entry: package name and the commit that closed the gap.
+# Each entry: package name, the commit that closed the gap (40 zeros
+# until it exists on main), and the closing pull request.
 packages = [
-    { name = "htop", commit = "0000000000000000000000000000000000000000" },
-    { name = "nano", commit = "0000000000000000000000000000000000000000" },
-    { name = "rsync", commit = "0000000000000000000000000000000000000000" },
-    { name = "tmux", commit = "0000000000000000000000000000000000000000" },
-    { name = "xdg-utils", commit = "0000000000000000000000000000000000000000" },
+    { name = "htop", commit = "0000000000000000000000000000000000000000", pr = 433 },
+    { name = "nano", commit = "0000000000000000000000000000000000000000", pr = 433 },
+    { name = "rsync", commit = "0000000000000000000000000000000000000000", pr = 433 },
+    { name = "tmux", commit = "0000000000000000000000000000000000000000", pr = 433 },
+    { name = "xdg-utils", commit = "0000000000000000000000000000000000000000", pr = 433 },
 ]
 
 [wontfix]
