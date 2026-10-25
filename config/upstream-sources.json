@@ -139,6 +139,13 @@
       ]
     },
     {
+      "name": "qpdf",
+      "version": "12.4.2",
+      "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2.tar.gz",
+      "filename": "qpdf-12.4.2.tar.gz",
+      "sha512": "97193fd5eb6460dcf2c179c445f756c553af5c3b8a0ab89ed78ea022bdbe147a73bc6e815e18d37b04d3a462fefe32ea3dd238c2a92a10616c3c38e170ce013e"
+    },
+    {
       "name": "rubberband",
       "version": "4.0.0",
       "url": "https://breakfastquay.com/files/releases/rubberband-4.0.0.tar.bz2",

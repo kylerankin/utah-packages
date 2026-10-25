@@ -2614,6 +2614,12 @@ packages:
     downstream_package_name: python-typing-inspection
     paths:
       - packages/python-typing-inspection
+  qpdf:
+    specfile_path: qpdf.spec
+    upstream_package_name: qpdf
+    downstream_package_name: qpdf
+    paths:
+      - packages/qpdf
   quota:
     specfile_path: quota.spec
     upstream_package_name: quota

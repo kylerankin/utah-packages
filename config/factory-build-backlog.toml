@@ -432,7 +432,6 @@ packages = [
     "python3-pyaudio",
     "python3-pyscard",
     "qadwaitadecorations-qt5",
-    "qpdf-libs",
     "qrencode-libs",
     "qt5-qtdeclarative",
     "qt5-qtsvg",
@@ -700,6 +699,7 @@ packages = [
     { name = "libbasicobjects", pr = 597 },
     { name = "libpath_utils", pr = 597 },
     { name = "libref_array", pr = 597 },
+    { name = "qpdf-libs", pr = 637 },
 ]
 
 [wontfix]
