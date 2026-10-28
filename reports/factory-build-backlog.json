@@ -6,8 +6,8 @@
       "total": 30
     },
     "dev-tools": {
-      "pending": 71,
-      "total": 71
+      "pending": 70,
+      "total": 70
     },
     "fonts-i18n": {
       "pending": 19,
@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 86,
-      "total": 89
+      "pending": 85,
+      "total": 88
     },
     "power": {
       "total": 0
@@ -381,11 +381,6 @@
     {
       "area": "dev-tools",
       "name": "python3-fido2",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-h11",
       "state": "pending"
     },
     {
@@ -865,11 +860,6 @@
     },
     {
       "area": "long-tail",
-      "name": "libpasswdqc",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "libpfm",
       "state": "pending"
     },
@@ -1188,11 +1178,11 @@
   "states": {
     "already_recipe": 12,
     "manifest_wants": 1,
-    "pending": 214
+    "pending": 212
   },
   "totals": {
-    "backlog": 227,
-    "resolved": 290,
+    "backlog": 225,
+    "resolved": 292,
     "wontfix": 34
   }
 }

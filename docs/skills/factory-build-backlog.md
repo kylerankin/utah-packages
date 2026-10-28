@@ -333,6 +333,8 @@ needed: inspect every built RPM's requirements for ICU 77 and resolve the
 runtime transaction using only Hummingbird and the factory. The opt-in does
 not prove the outputs are safe or published.
 
+The `python-h11` source archive has no runtime dependencies; its recipe runs the bundled pytest suite. Recipe coverage still requires a hosted build and a factory-plus-Hummingbird installation test before claiming publication or installability.
+
 A Python wheel's runtime closure is not in its `Requires`. `python-pillow`
 links `libraqm.so.0` (hence `libraqm`, imported with it) and its
 `python3-pillow-qt` subpackage needs `python3-qt5`, which neither Hummingbird
@@ -661,6 +663,28 @@ primary checksum with the catalog evidence. Fetch by that digest when checking
 the raw metadata so a moving `latest` tag cannot mix two publications.
 Metadata publication is independent of the workflow's aggregate conclusion;
 it does not establish a successful runtime transaction or payload exercise.
+
+The `passwdqc` source also builds `libpasswdqc` through `%package -n
+lib%name`. The inventory auditor does not expand that concatenated macro, so
+this output can appear `pending` even with a registered, source-locked recipe.
+Verify the expanded binary name and `passwdqc` source RPM in published metadata
+before reconciling it; do not import a second recipe named `libpasswdqc`.
+Its merged import is #676 (which adopted the closed #644), so use the merged
+PR and its target-branch commit for provenance rather than the earlier proposal.
+Publication of the library does not verify password policy or PAM integration;
+keep those consumer checks separate from catalog accounting.
+
+A closed import PR is not necessarily a rejected import: maintainers can adopt
+its commits in another PR. Follow its closing comment, verify the adoption PR
+is merged and its merge commit is on the target branch, then use that merged
+PR and stable commit for the catalog record. For example, `passwdqc` came
+through #676 (adopting #644), and `portaudio` through #752 (adopting #748).
+The `passwdqc` source emits `pam_passwdqc`, `passwdqc`, and `passwdqc-utils`;
+check all three binary versions in primary metadata before filling publication
+fields. Updating optional publication fields does not change the auditor's
+name-only snapshot; rerun it anyway and expect no report diff when no names
+or recipe classifications changed. Publication still does not prove password
+policy integration, audio-device operation, or a permitted-repository install.
 
 ### S-Lang library imports
 

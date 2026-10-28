@@ -2872,6 +2872,12 @@ packages:
     downstream_package_name: python-evdev
     paths:
       - packages/python-evdev
+  python-h11:
+    specfile_path: python-h11.spec
+    upstream_package_name: python-h11
+    downstream_package_name: python-h11
+    paths:
+      - packages/python-h11
   python-linux-procfs:
     specfile_path: python-linux-procfs.spec
     upstream_package_name: python-linux-procfs

@@ -150,7 +150,6 @@ packages = [
     "python3-email-validator",
     "python3-enchant",
     "python3-fido2",
-    "python3-h11",
     "python3-html2text",
     "python3-httpcore",
     "python3-httpx",
@@ -270,7 +269,6 @@ packages = [
     "libmspack",
     "libnet",
     "libpaper",
-    "libpasswdqc",
     "libpfm",
     "libreport-filesystem",
     "librtmp",
@@ -359,7 +357,7 @@ packages = [
     { name = "plymouth-theme-spinner", commit = "9565b33477aa10c8af48774fff2598f028a3241a", pr = 320, published_run = 40416793064, published_nevra = "plymouth-theme-spinner-0:26.134.222-1.hum1.bfin.x86_64" },
     { name = "davfs2", pr = 696 },
     { name = "neon", pr = 696 },
-    { name = "libntlm", pr = 696 },
+    { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
     { name = "libraw1394", pr = 681 },
@@ -370,8 +368,11 @@ packages = [
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
     { name = "iptstate", pr = 697 },
-    # Recipe coverage; publication and runtime proof remain tracked in #502.
-    { name = "libdeflate", pr = 695 },
+    # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
+    # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
+    # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
+    { name = "libpasswdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "libpasswdqc-0:2.0.3-10.hum1.bfin.x86_64" },
+    { name = "libdeflate", pr = 695, published_run = 40626803772, published_nevra = "libdeflate-0:1.26-1.hum1.bfin.x86_64" },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
@@ -415,18 +416,19 @@ packages = [
     { name = "python3-ptyprocess", pr = 684 },
     { name = "python3-dateutil", pr = 613 },
     { name = "python3-six", pr = 613 },
+    { name = "python3-h11" },
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
     # BSD compatibility library and its digest-library dependency (#487).
     # Recipe import only; build/publication and Utah consumption remain separate proof.
     { name = "libbsd", pr = 614 },
-    { name = "libmd", pr = 614 },
+    { name = "libmd", pr = 614, published_run = 40626803772, published_nevra = "libmd-0:1.3.0-1.hum1.bfin.x86_64" },
     { name = "spice-vdagent", pr = 679 }, # Recipe import; publication/installability tracked in #490.
     { name = "sshpass", pr = 611 }, # Recipe import; publication/installability tracked in #490.
-    # Password-quality source family: passwdqc builds all three (projectbluefin/utah-packages#644, #505).
-    { name = "pam_passwdqc", pr = 644 },
-    { name = "passwdqc", pr = 644 },
-    { name = "passwdqc-utils", pr = 644 },
+    # Password-quality source family: #676 merged the recipes from #644; publication is not runtime acceptance (#505).
+    { name = "pam_passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "pam_passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
+    { name = "passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
+    { name = "passwdqc-utils", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "passwdqc-utils-0:2.0.3-10.hum1.bfin.x86_64" },
     # Smart-card recipes imported in #364; publication verified for #478.
     { name = "pcsc-lite", commit = "a09ec58", pr = 364 },
     { name = "pcsc-lite-libs", commit = "a09ec58", pr = 364 },
@@ -449,7 +451,7 @@ packages = [
     { name = "vpnc-script", pr = 585 },
     { name = "stoken-libs", pr = 585 },
     { name = "pkcs11-helper", pr = 585 },
-    { name = "libpskc", pr = 585 },
+    { name = "libpskc", pr = 585, published_run = 40626803772, published_nevra = "libpskc-0:2.6.15-1.hum1.bfin.x86_64" },
     { name = "libuser", pr = 585 },
     { name = "usermode", pr = 585 },
     # Screen-reader stack (projectbluefin/utah-packages#447).
@@ -604,7 +606,7 @@ packages = [
     { name = "gutenprint-cups", pr = 586 },
     { name = "gutenprint-libs", pr = 586 },
     { name = "ipp-usb", pr = 586 },
-    { name = "libieee1284", pr = 586 },
+    { name = "libieee1284", pr = 586, published_run = 40626803772, published_nevra = "libieee1284-0:0.2.11-50.hum1.bfin.x86_64" },
     { name = "libsane-airscan", pr = 586 },
     { name = "mpage", pr = 586 },
     { name = "printer-driver-brlaser", pr = 586 },
@@ -636,7 +638,7 @@ packages = [
     { name = "man-pages", pr = 587 },
     { name = "mtr", pr = 587 },
     { name = "nvme-cli", pr = 587 },
-    { name = "pinfo", pr = 587 },
+    { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
     { name = "smartmontools", pr = 587 },
@@ -661,10 +663,10 @@ packages = [
     { name = "quota", pr = 597, published_run = 40626803772, published_nevra = "quota-1:4.11-4.hum1.bfin.x86_64" },
     { name = "quota-nls", pr = 597, published_run = 40626803772, published_nevra = "quota-nls-1:4.11-4.hum1.bfin.noarch" },
     { name = "libcollection", pr = 597 },
-    { name = "libini_config", pr = 597 },
-    { name = "libdhash", pr = 597 },
+    { name = "libini_config", pr = 597, published_run = 40626803772, published_nevra = "libini_config-0:2.0.0-63.hum1.bfin.x86_64" },
+    { name = "libdhash", pr = 597, published_run = 40626803772, published_nevra = "libdhash-0:0.5.0-63.hum1.bfin.x86_64" },
     # nfs-utils subpackage imported in #524; publication verified for #502.
-    { name = "libnfsidmap", pr = 524 },
+    { name = "libnfsidmap", pr = 524, published_run = 40626803772, published_nevra = "libnfsidmap-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
     { name = "libbasicobjects", pr = 597 },
     { name = "libpath_utils", pr = 597 },
     { name = "libref_array", pr = 597 },
@@ -737,7 +739,8 @@ packages = [
     { name = "svt-vp9-libs", pr = 626 },
     # PyAudio (Python bindings for audio capture/playback) and the PortAudio
     # library it links against (#506); both long-tail names.
-    { name = "portaudio", pr = 748 },
+    # #752 adopted #748 and merged its source family.
+    { name = "portaudio", commit = "da68d0f0b38c2f8bacf3fbfc6dd13c0b17681134", pr = 752, published_run = 40626803772, published_nevra = "portaudio-0:19.7.0-1.hum1.bfin.x86_64" },
     { name = "python3-pyaudio", pr = 748, published_run = 40626803772, published_nevra = "python3-pyaudio-0:0.2.13-14.hum1.bfin.x86_64" },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
