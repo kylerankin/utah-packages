@@ -6,16 +6,16 @@
       "total": 30
     },
     "dev-tools": {
-      "pending": 72,
-      "total": 72
+      "pending": 71,
+      "total": 71
     },
     "fonts-i18n": {
       "pending": 19,
       "total": 19
     },
     "gnome-apps": {
-      "pending": 6,
-      "total": 6
+      "pending": 5,
+      "total": 5
     },
     "long-tail": {
       "already_recipe": 2,
@@ -321,11 +321,6 @@
     {
       "area": "dev-tools",
       "name": "lsb_release",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "ntfs-3g-system-compression",
       "state": "pending"
     },
     {
@@ -661,11 +656,6 @@
     {
       "area": "gnome-apps",
       "name": "imath",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "libgee",
       "state": "pending"
     },
     {
@@ -1198,11 +1188,11 @@
   "states": {
     "already_recipe": 12,
     "manifest_wants": 1,
-    "pending": 216
+    "pending": 214
   },
   "totals": {
-    "backlog": 229,
-    "resolved": 288,
+    "backlog": 227,
+    "resolved": 290,
     "wontfix": 34
   }
 }

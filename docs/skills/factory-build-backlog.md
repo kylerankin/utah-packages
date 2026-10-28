@@ -255,7 +255,20 @@ description. Reserve `Closes #<issue>` for a batch whose named outputs and
 acceptance requirements are all resolved or explicitly blocked by linked
 decisions, as required by that issue. Check the entire description for closing
 keywords before pushing: a trailing `Closes` still auto-closes the issue even
-when the summary describes partial progress.
+when the summary describes partial progress. Repeat the live-body readback after
+the push and any automation that rewrites the description. If a closing footer
+returns, replace it with `Refs` in the saved PR body and read it back again;
+a new branch head does not by itself resolve a description-only review finding.
+
+### Collection-library imports
+
+`libgee` produces `libgee` and `libgee-devel` from one source recipe; do not
+import the development output separately. Its upstream archive includes C
+sources, but the Fedora recipe touches the Vala inputs and explicitly enables
+Vala regeneration for compiler compatibility. Retain the `vala` BuildRequires,
+`--enable-vala`, and the real `make check` step when importing it. A source lock
+and catalog closing record establish the recipe import only; scoped hosted
+build, publication and runtime evidence are still required for the output batch.
 
 ### Locking sources for a hand import
 
@@ -526,7 +539,7 @@ BuildRequires is absent from Hummingbird (the build root also uses Fedora).
 
 After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs. If a rebase conflicts in this generated report, resolve the catalog and recipe inputs first, then run `python3 tools/factory_build_backlog.py`; choosing either report wholesale can discard the other branch’s backlog updates.
 
-After combining recipe inventories during a rebase, also rerun `python3 tools/render_packit_config.py --write` and `python3 tools/render_architecture_counts.py --write` before `just check` to reconcile derived package lists and counts.
+After combining recipe inventories during a rebase, also rerun `python3 tools/render_packit_config.py --write` and `python3 tools/render_architecture_counts.py --write` before `just check` to reconcile derived package lists and counts. A conflict resolution can leave valid package entries but stale architecture counts; regenerate from the final combined inventory even if the document itself had no conflict.
 After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs.
 
 When concurrent disposition PRs conflict during rebase, retain each distinct
@@ -638,6 +651,17 @@ main but not yet in the published image stay in `[resolved]` without
 publication fields until a run ships them. Partial reconciliation PRs must
 link the tracking issue with `Refs #<issue>`, not a closing keyword.
 
+Use `parse_primary(primary_from_layer(blob))` from `tools/package_index.py`
+when recording each binary's NEVRA. The rendered site's `packages` entries
+are grouped by source RPM: their version and release come from that source,
+and their epoch comes from the group's leading binary. Those values are not
+necessarily the identity of every sibling binary. Read each binary's own
+metadata (including epoch and architecture), and retain the image digest and
+primary checksum with the catalog evidence. Fetch by that digest when checking
+the raw metadata so a moving `latest` tag cannot mix two publications.
+Metadata publication is independent of the workflow's aggregate conclusion;
+it does not establish a successful runtime transaction or payload exercise.
+
 ### S-Lang library imports
 
 The `slang` source produces the audited `slang` library and a separate
@@ -701,6 +725,14 @@ in `ghcr.io/projectbluefin/utah-packages:latest` and move them from
 Previously resolved GNOME outputs (`gtkmm4.0`, `pangomm2.48`, `gtksourceview5`,
 `libhandy`, `libspelling`) also populate their observed `published_run` and
 `published_nevra` fields. Remaining outputs without recipes or source locks
-(`imath`, `libgee`, `libmediaart`, `libwnck3`, `rygel`) stay pending in
+(`imath`, `libmediaart`, `libwnck3`, `rygel`) stay pending in
 `[areas.gnome-apps]`, and the batch issue remains open with `Refs #484`.
 
+
+### NTFS system compression plugin
+
+The `ntfs-3g-system-compression` source produces a plugin for the existing
+`ntfs-3g` driver, not a second driver recipe. Its build requires
+`pkgconfig(libntfs-3g)`, so keep the existing source in the factory graph.
+A catalog record for the recipe does not prove the plugin has been built,
+published, or loaded with the driver.

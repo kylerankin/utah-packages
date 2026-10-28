@@ -104,7 +104,6 @@ consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
     "imath",
-    "libgee",
     "libmediaart",
     "libwnck3",
     "rygel",
@@ -139,7 +138,6 @@ packages = [
     "libsss_nss_idmap",
     "libsss_sudo",
     "lsb_release",
-    "ntfs-3g-system-compression",
     "oddjob",
     "oddjob-mkhomedir",
     "open-vm-tools",
@@ -327,6 +325,13 @@ packages = [
 ]
 
 [resolved]
+# Long-tail #506 publication fields from run 40626803772 describe these seven outputs:
+# python3-cups, python3-linux-procfs, python3-pyaudio, qpdf-libs, quota, quota-nls, redhat-menus.
+# Image: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
+# Source revision: d645fd21fdcc879ed9ad01f04a1acade5fd8fe1d (on main).
+# Primary metadata SHA-256: d364c5f677095a7d4aeb03cf0e86b13d524b7a07e514ef5e79e9f389f9e8178f
+# Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
+# This records published metadata, not successful runtime transactions or completion of #506.
 # GNOME batch #483 publication: ghcr.io/projectbluefin/utah-packages@sha256:7a18f83ef345e1c4f101e2ec00a2c8dffd7e5ef679089bf9d90238a58d99a593
 # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40151594832
 # Published binaries can survive newer failed rebuilds; this is not a runtime validation claim.
@@ -334,6 +339,10 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Recipe import only; build, publication and runtime proof remain on #484.
+    { name = "libgee" },
+    # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
+    { name = "ntfs-3g-system-compression", pr = 771 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
@@ -430,7 +439,7 @@ packages = [
     { name = "python3-pillow", pr = 596 },
     { name = "usbutils", pr = 596 },
     { name = "net-snmp-libs", pr = 596, published_run = 40511180133, published_nevra = "net-snmp-libs-1:5.9.5.2-10.hum1.bfin.x86_64" },
-    { name = "python3-cups", pr = 596 },
+    { name = "python3-cups", pr = 596, published_run = 40626803772, published_nevra = "python3-cups-0:2.0.4-11.hum1.bfin.x86_64" },
     { name = "libraqm", pr = 596 },
     # VPN stack + oath-toolkit/libuser/usermode closure (projectbluefin/utah-packages#585).
     { name = "NetworkManager-openconnect", pr = 585 },
@@ -485,7 +494,7 @@ packages = [
     { name = "python3-pyudev", pr = 595 },
     { name = "virt-what", pr = 595 },
     { name = "libtraceevent", pr = 595 },
-    { name = "python3-linux-procfs", pr = 595 },
+    { name = "python3-linux-procfs", pr = 595, published_run = 40626803772, published_nevra = "python3-linux-procfs-0:0.7.4-5.hum1.bfin.noarch" },
     # Netfs/auth starters (landing PR #524). Subpackage closures:
     # cifs-utils-info (%package info), nfs-common/client/v3/v4 (%package -n),
     # pinentry-gnome3 (%package gnome3).
@@ -575,7 +584,7 @@ packages = [
     { name = "libvncserver", pr = 573 },
     { name = "mod_dnssd", pr = 573, published_run = 40511180133, published_nevra = "mod_dnssd-0:0.6-37.hum1.bfin.x86_64" },
     { name = "mozilla-filesystem", pr = 573, published_run = 40511180133, published_nevra = "mozilla-filesystem-0:1.9-39.hum1.bfin.x86_64" },
-    { name = "redhat-menus", pr = 573 },
+    { name = "redhat-menus", pr = 573, published_run = 40626803772, published_nevra = "redhat-menus-0:12.0.2-1.hum1.bfin.noarch" },
     # sso-mib-libs is a %package subpackage of sso-mib.spec (PR #574).
     { name = "sso-mib-libs", pr = 574 },
     # foo2zjs and its runtime dependencies (argyllcms, lcms 1.x, libXScrnSaver).
@@ -649,8 +658,8 @@ packages = [
     { name = "libutempter", pr = 597 },
     { name = "libhandy", pr = 597, published_run = 40569848351, published_nevra = "libhandy-0:1.8.3-1.hum1.bfin.x86_64" },
     { name = "gssproxy", pr = 597 },
-    { name = "quota", pr = 597 },
-    { name = "quota-nls", pr = 597 },
+    { name = "quota", pr = 597, published_run = 40626803772, published_nevra = "quota-1:4.11-4.hum1.bfin.x86_64" },
+    { name = "quota-nls", pr = 597, published_run = 40626803772, published_nevra = "quota-nls-1:4.11-4.hum1.bfin.noarch" },
     { name = "libcollection", pr = 597 },
     { name = "libini_config", pr = 597 },
     { name = "libdhash", pr = 597 },
@@ -715,7 +724,7 @@ packages = [
     # librabbitmq (source librabbitmq) and libwmf-lite (source libwmf) recipe imports (#503).
     { name = "librabbitmq", pr = 756 },
     { name = "libwmf-lite", pr = 756 },
-    { name = "qpdf-libs", pr = 640 },
+    { name = "qpdf-libs", pr = 640, published_run = 40626803772, published_nevra = "qpdf-libs-0:12.4.2-1.hum1.bfin.x86_64" },
     # Handwriting recognition (zinnia also builds zinnia-tomoe-ja) and zix (#509).
     { name = "zinnia", pr = 630 },
     { name = "zinnia-tomoe-ja", pr = 630 },
@@ -729,7 +738,7 @@ packages = [
     # PyAudio (Python bindings for audio capture/playback) and the PortAudio
     # library it links against (#506); both long-tail names.
     { name = "portaudio", pr = 748 },
-    { name = "python3-pyaudio", pr = 748 },
+    { name = "python3-pyaudio", pr = 748, published_run = 40626803772, published_nevra = "python3-pyaudio-0:0.2.13-14.hum1.bfin.x86_64" },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.
