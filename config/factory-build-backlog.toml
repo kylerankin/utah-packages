@@ -52,7 +52,6 @@ packages = [
     "libavfilter",
     "libavformat",
     "libavutil",
-    "libdc1394",
     "libde265",
     "libdovi",
     "libfdk-aac",
@@ -363,6 +362,7 @@ packages = [
     { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
+    { name = "libdc1394", pr = 794 },
     { name = "libraw1394", pr = 681 },
     { name = "pam_yubico", pr = 706 },
     # Smart-card Python binding; hosted build and runtime proof remain in #506.

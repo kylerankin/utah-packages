@@ -6083,6 +6083,16 @@
       "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
       "filename": "click-8.4.2.tar.gz",
       "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
+    },
+    {
+      "name": "libdc1394",
+      "version": "2.2.7",
+      "url": "https://downloads.sourceforge.net/project/libdc1394/libdc1394-2/2.2.7/libdc1394-2.2.7.tar.gz",
+      "filename": "libdc1394-2.2.7.tar.gz",
+      "sha512": "0d0b1861612f7c69753af7109ef226ea4e550353222e02663dfaac3fa8f456b94c2dd2579cac840047a42bac97692da436f10be3def1fa29109de05c1e871257",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libdc1394/libdc1394-2.2.7.tar.gz/sha512/0d0b1861612f7c69753af7109ef226ea4e550353222e02663dfaac3fa8f456b94c2dd2579cac840047a42bac97692da436f10be3def1fa29109de05c1e871257/libdc1394-2.2.7.tar.gz"
+      ]
     }
   ]
 }
