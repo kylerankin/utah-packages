@@ -10,7 +10,7 @@
       "total": 56
     },
     "fonts-i18n": {
-      "pending": 15,
+"pending": 15,
       "total": 15
     },
     "gnome-apps": {
@@ -465,36 +465,6 @@
     },
     {
       "area": "fonts-i18n",
-      "name": "ibus-anthy",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "ibus-anthy-python",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "ibus-hangul",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "ibus-libpinyin",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "ibus-m17n",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "ibus-typing-booster",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
       "name": "kasumi-common",
       "state": "pending"
     },
@@ -928,7 +898,7 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 168
+"pending": 168
   },
   "totals": {
     "backlog": 176,
