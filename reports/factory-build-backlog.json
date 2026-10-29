@@ -6,12 +6,12 @@
       "total": 29
     },
     "dev-tools": {
-      "pending": 67,
-      "total": 67
+      "pending": 66,
+      "total": 66
     },
     "fonts-i18n": {
-      "pending": 19,
-      "total": 19
+      "pending": 17,
+      "total": 17
     },
     "gnome-apps": {
       "pending": 5,
@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 85,
-      "total": 88
+      "pending": 81,
+      "total": 84
     },
     "power": {
       "total": 0
@@ -405,11 +405,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "python3-jmespath",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "python3-keyring",
       "state": "pending"
     },
@@ -570,11 +565,6 @@
     },
     {
       "area": "fonts-i18n",
-      "name": "ibus-chewing",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
       "name": "ibus-hangul",
       "state": "pending"
     },
@@ -601,11 +591,6 @@
     {
       "area": "fonts-i18n",
       "name": "kasumi-unicode",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "libchewing",
       "state": "pending"
     },
     {
@@ -796,11 +781,6 @@
     {
       "area": "long-tail",
       "name": "kvazaar-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "kyotocabinet-libs",
       "state": "pending"
     },
     {
@@ -1060,16 +1040,6 @@
     },
     {
       "area": "long-tail",
-      "name": "udftools",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "uresourced",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "uvg266-libs",
       "state": "pending"
     },
@@ -1081,11 +1051,6 @@
     {
       "area": "long-tail",
       "name": "virtualbox-guest-additions",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "xfsprogs",
       "state": "pending"
     },
     {
@@ -1158,11 +1123,11 @@
   "states": {
     "already_recipe": 12,
     "manifest_wants": 1,
-    "pending": 208
+    "pending": 201
   },
   "totals": {
-    "backlog": 221,
-    "resolved": 294,
+    "backlog": 214,
+    "resolved": 301,
     "wontfix": 36
   }
 }
