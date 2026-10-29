@@ -10,8 +10,8 @@
       "total": 67
     },
     "fonts-i18n": {
-      "pending": 19,
-      "total": 19
+      "pending": 17,
+      "total": 17
     },
     "gnome-apps": {
       "pending": 5,
@@ -570,11 +570,6 @@
     },
     {
       "area": "fonts-i18n",
-      "name": "ibus-chewing",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
       "name": "ibus-hangul",
       "state": "pending"
     },
@@ -601,11 +596,6 @@
     {
       "area": "fonts-i18n",
       "name": "kasumi-unicode",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "libchewing",
       "state": "pending"
     },
     {
@@ -1163,11 +1153,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 208
+    "pending": 206
   },
   "totals": {
-    "backlog": 222,
-    "resolved": 293,
+    "backlog": 220,
+    "resolved": 295,
     "wontfix": 36
   }
 }

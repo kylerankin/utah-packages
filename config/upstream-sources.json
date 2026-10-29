@@ -1343,6 +1343,26 @@
       ]
     },
     {
+      "name": "ibus-chewing",
+      "version": "2.2.0",
+      "url": "https://codeberg.org/chewing/ibus-chewing/releases/download/v2.2.0/ibus-chewing-2.2.0.tar.xz",
+      "filename": "ibus-chewing-2.2.0.tar.xz",
+      "sha512": "7b0e9b9e7830f70b1e47ab08cb5bb02a6e5af63da640f534b48f6027041d907eb10dc5d474ef2dc7905c17a9d62cc1ffec9cac6ea266de00b10329f32aa3d61a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-chewing/ibus-chewing-2.2.0.tar.xz/sha512/7b0e9b9e7830f70b1e47ab08cb5bb02a6e5af63da640f534b48f6027041d907eb10dc5d474ef2dc7905c17a9d62cc1ffec9cac6ea266de00b10329f32aa3d61a/ibus-chewing-2.2.0.tar.xz"
+      ]
+    },
+    {
+      "name": "libchewing",
+      "version": "0.13.1",
+      "url": "https://codeberg.org/chewing/libchewing/releases/download/v0.13.1/libchewing-0.13.1.tar.zst",
+      "filename": "libchewing-0.13.1.tar.zst",
+      "sha512": "85e68957a495e5f4b0c10a2552c5fdae08ba30c182ba92592329dd8c4275e4d5046a46bee1e43a7f9f7ca96d50a0a5ce1e6aa3771e9496fb12ad4aeb9d989020",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libchewing/libchewing-0.13.1.tar.zst/sha512/85e68957a495e5f4b0c10a2552c5fdae08ba30c182ba92592329dd8c4275e4d5046a46bee1e43a7f9f7ca96d50a0a5ce1e6aa3771e9496fb12ad4aeb9d989020/libchewing-0.13.1.tar.zst"
+      ]
+    },
+    {
       "name": "icu",
       "version": "78.3",
       "url": "https://github.com/unicode-org/icu/archive/refs/tags/release-78.3.tar.gz",

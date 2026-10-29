@@ -1102,6 +1102,12 @@ packages:
     downstream_package_name: ibus
     paths:
       - packages/ibus
+  ibus-chewing:
+    specfile_path: ibus-chewing.spec
+    upstream_package_name: ibus-chewing
+    downstream_package_name: ibus-chewing
+    paths:
+      - packages/ibus-chewing
   ibus-unikey:
     specfile_path: ibus-unikey.spec
     upstream_package_name: ibus-unikey
@@ -1486,6 +1492,12 @@ packages:
     downstream_package_name: libcdio-paranoia
     paths:
       - packages/libcdio-paranoia
+  libchewing:
+    specfile_path: libchewing.spec
+    upstream_package_name: libchewing
+    downstream_package_name: libchewing
+    paths:
+      - packages/libchewing
   libcloudproviders:
     specfile_path: libcloudproviders.spec
     upstream_package_name: libcloudproviders

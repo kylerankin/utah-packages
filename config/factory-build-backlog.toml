@@ -193,14 +193,12 @@ packages = [
     "cldr-emoji-annotation-dtd",
     "ibus-anthy",
     "ibus-anthy-python",
-    "ibus-chewing",
     "ibus-hangul",
     "ibus-libpinyin",
     "ibus-m17n",
     "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
-    "libchewing",
     "libpinyin",
     "libpinyin-data",
     "m17n-lib",
@@ -339,6 +337,9 @@ packages = [
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
+    # Chewing input-method engine + library recipe for #494; hosted build, publication and runtime proof remain open.
+    { name = "ibus-chewing" },
+    { name = "libchewing" },
     # Recipe import only; build, publication and runtime proof remain on #508.
     { name = "uchardet", pr = 729 },
     # Published boot-screen outputs; recipe #312, source lock #320; runtime proof stays on #505.
