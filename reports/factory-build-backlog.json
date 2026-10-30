@@ -6,8 +6,8 @@
       "total": 21
     },
     "dev-tools": {
-      "pending": 58,
-      "total": 58
+      "pending": 57,
+      "total": 57
     },
     "fonts-i18n": {
       "pending": 15,
@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 73,
-      "total": 76
+      "pending": 70,
+      "total": 73
     },
     "power": {
       "total": 0
@@ -201,11 +201,6 @@
     {
       "area": "dev-tools",
       "name": "hfsplus-tools",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "iwd",
       "state": "pending"
     },
     {
@@ -660,11 +655,6 @@
     },
     {
       "area": "long-tail",
-      "name": "libell",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "libev",
       "state": "pending"
     },
@@ -701,16 +691,6 @@
     {
       "area": "long-tail",
       "name": "libreport-filesystem",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "librtmp",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libslirp",
       "state": "pending"
     },
     {
@@ -958,11 +938,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 173
+    "pending": 169
   },
   "totals": {
-    "backlog": 181,
-    "resolved": 333,
+    "backlog": 177,
+    "resolved": 337,
     "wontfix": 37
   }
 }

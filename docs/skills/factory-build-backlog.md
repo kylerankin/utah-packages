@@ -538,6 +538,21 @@ The `ifuse` recipe builds against the existing `libimobiledevice`,
 `libimobiledevice-glue`, and `libplist` recipes and needs `usbmuxd` at
 runtime. An imported recipe alone does not prove a device can be mounted;
 verify the published package and its runtime dependencies on a real device.
+
+### iwd and the Embedded Linux Library
+
+Fedora builds `iwd` with `--enable-external-ell`, so it links `libell.so` at
+runtime and Hummingbird does not ship it. Import the `libell` source package
+alongside it. Fedora's `ell` dist-git is an unrelated header-only C++ grammar
+library; do not import it for `pkgconfig(ell)`. The `libell-devel` `%files`
+list `ell.pc`, so the build graph orders `libell` before `iwd` without a
+`stage`. Fedora's `iwd` `.gitignore` ignores `iwd.spec` and `sources`: stage
+them with `git add -f`, or the import commits an empty recipe.
+
+Two other names in the same batch have no straightforward import. Fedora
+retired `fuse-encfs` in Rawhide (`dead.package`), and the `hfsplus-tools`
+`Source0` host returns 404 while dist-git still pins an MD5 `sources` entry.
+Each needs its own source decision rather than a Rawhide import.
 ### WebDAV filesystem runtime closure
 
 `davfs2` uses the `neon` HTTP/WebDAV library; its default build in turn links
@@ -859,12 +874,23 @@ the fallback. `liburing` locks only `Source0`; like `dnsmasq`, its `.asc`
 signature is fetched from Fedora's lookaside by its `sources` SHA-512.
 
 `librabbitmq` and `libwmf-lite` (a subpackage of `libwmf`) lock their GitHub
-tag archives directly: those bytes equal the dist-git SHA-512 pins. Two
-outputs need more than a lock. `libslirp`'s GitLab tag archive differs from
-Fedora's `.tar.xz` pin, so it needs a `generate` entry or a matching upstream
-release asset. `librtmp` comes from `rtmpdump`, whose `Source0` is a local
-`git archive` of tag `v2.6` with no download URL. Check the archive bytes
-against the pin before you lock a source.
+tag archives directly: those bytes equal the dist-git SHA-512 pins. Check the
+archive bytes against the pin before you lock a source.
+
+`libslirp` and `librtmp` (source `rtmpdump`) have no release file, so their
+locks are `generate` entries in `GIT_ARCHIVE_SOURCES`
+(`tools/generated_sources.py`): fetch the tag, check that it still resolves
+to the pinned commit, and `git archive --format=tar --prefix=<name>-<version>/`.
+To find out how Fedora made such a tarball, decompress its lookaside copy and
+compare the raw tar with `git archive`. Then try each compressor setting.
+`libslirp`'s tar is GitLab's archive, and Python's `lzma` preset 6 (CRC64)
+reproduces Fedora's `.tar.xz` pin exactly, so `sources` is unchanged. For
+`rtmpdump`, the tar is byte-identical but Fedora's gzip stream is not: it is
+zlib-ng output, which neither GNU gzip nor Python's zlib reproduces. So it is
+`gzip -n -9`, and `sources` is repinned to the generated digest.
+`git.ffmpeg.org/rtmpdump.git` advertises refs to the all-zero object, which
+makes `git clone` fail with `upload-pack: not our ref 0000…`. Fetch only
+`refs/tags/<tag>` into an empty repository instead.
 
 ### GNOME apps batch #484: terminal outputs and publication reconciliation
 

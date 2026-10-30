@@ -1561,7 +1561,7 @@
     {
       "name": "kde-filesystem",
       "version": "5",
-      "url": "https://src.fedoraproject.org/rpms/kde-filesystem/raw/rawhide/f/teamnames",
+      "url": "https://src.fedoraproject.org/rpms/kde-filesystem/raw/4f395f604e7ed4011226d72aa27bff0bb7b2aee2/f/teamnames",
       "filename": "teamnames",
       "sha512": "6f75ae54d326bc23c3f011aaefe6deb3754579b922f6af94ba13af6f16b794f1b12c6e3ecc74eeb1ff905fdac6fc04b96e4e5e538096622ab3b6e33b38c6b624"
     },
@@ -1575,7 +1575,7 @@
     {
       "name": "kf5",
       "version": "5.116.0",
-      "url": "https://src.fedoraproject.org/rpms/kf5/raw/rawhide/f/macros.kf5",
+      "url": "https://src.fedoraproject.org/rpms/kf5/raw/249e170c4968b43afee96b0768c4a335b81dfcbd/f/macros.kf5",
       "filename": "macros.kf5",
       "sha512": "252d27ab79bac05ecb322fdfa80b827d1e6676fdb4af6af77b50dd9b6f60b006cdf11199a64668334f36531d90994e7d20748bc79cdb987e89bf317f7afe69af"
     },
@@ -6314,6 +6314,48 @@
       "url": "https://github.com/OpenSC/OpenSC/releases/download/0.27.1/opensc-0.27.1.tar.gz",
       "filename": "opensc-0.27.1.tar.gz",
       "sha512": "1d435938d5db45ffc60e2ac2512c42bc7ee893991d213b19033a60cabca19a7ddd5bf1f71bb172dcb77220bfa87abe92564b3edc878f22a87dfd4e7bcacf662f"
+    },
+    {
+      "name": "libslirp",
+      "version": "4.9.6",
+      "filename": "libslirp-4.9.6.tar.xz",
+      "sha512": "66cf1461af281d6616fa75a338bc0fa439cbfdc38ffe4694cad93bd58b5affd36db52325535c200d01248c4e3f3a6d2e520baf35f1be97c2069ff10f2c00be49",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://gitlab.freedesktop.org/slirp/libslirp.git tag v4.9.6 (commit 392af90207fc51dd9f9044ee9b1f963f3c851c2c)",
+        "method": "git archive --format=tar --prefix=libslirp-4.9.6/ of the pinned commit, compressed deterministically as libslirp-4.9.6.tar.xz"
+      }
+    },
+    {
+      "name": "rtmpdump",
+      "version": "2.6",
+      "filename": "rtmpdump-2.6.tar.gz",
+      "sha512": "423d7c94a02822a073840de1962c676d9eaf419347fc565086dbe995520c7bed8ff565a9d8283f80c4895bbb8dbba8e56bdd779a4b4ad58991e5e162ff7b9913",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://git.ffmpeg.org/rtmpdump.git tag v2.6 (commit 138fdb258d9fc26f1843fd1b891180416c9dc575)",
+        "method": "git archive --format=tar --prefix=rtmpdump-2.6/ of the pinned commit, compressed deterministically as rtmpdump-2.6.tar.gz"
+      }
+    },
+    {
+      "name": "libell",
+      "version": "0.83",
+      "url": "https://www.kernel.org/pub/linux/libs/ell/ell-0.83.tar.xz",
+      "filename": "ell-0.83.tar.xz",
+      "sha512": "4cf7f65fb0595158c2719d0b53b6059877f53e701fb708f4e5315f81af0d70a6083799bf1d11f33fede24edbccb78694ea5b598b286dcc60d9fb695261339879",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libell/ell-0.83.tar.xz/sha512/4cf7f65fb0595158c2719d0b53b6059877f53e701fb708f4e5315f81af0d70a6083799bf1d11f33fede24edbccb78694ea5b598b286dcc60d9fb695261339879/ell-0.83.tar.xz"
+      ]
+    },
+    {
+      "name": "iwd",
+      "version": "3.12",
+      "url": "https://www.kernel.org/pub/linux/network/wireless/iwd-3.12.tar.xz",
+      "filename": "iwd-3.12.tar.xz",
+      "sha512": "47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/iwd/iwd-3.12.tar.xz/sha512/47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7/iwd-3.12.tar.xz"
+      ]
     }
   ]
 }
