@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 64,
-      "total": 67
+      "pending": 60,
+      "total": 63
     },
     "power": {
       "total": 0
@@ -810,26 +810,6 @@
     },
     {
       "area": "long-tail",
-      "name": "tesseract-common",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-langpack-eng",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-tessdata-doc",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "uavs3d-libs",
       "state": "pending"
     },
@@ -898,11 +878,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 161
+    "pending": 157
   },
   "totals": {
-    "backlog": 169,
-    "resolved": 345,
+    "backlog": 165,
+    "resolved": 349,
     "wontfix": 37
   }
 }
