@@ -2,7 +2,11 @@ Name:           prefixdevname
 Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Udev helper utility that provides network interface naming using user defined prefix
-License:        MIT
+# MIT
+# MIT OR Apache-2.0
+# Unlicense OR MIT
+License:        MIT AND (MIT OR Apache-2.0) AND (Unlicense OR MIT)
+# LICENSE.dependencies contains a full license breakdown
 URL:            https://github.com/msekletar/prefixdevname
 Source:         prefixdevname-%{version}-vendored.tar.xz
 
@@ -24,11 +28,11 @@ configuration file for udev's net_setup_link built-in
 %autosetup -n %{name}-%{version}
 %cargo_prep -v vendor
 
-%generate_buildrequires
-%cargo_generate_buildrequires
-
 %build
 %cargo_build
+%{cargo_license_summary}
+%{cargo_license} > LICENSE.dependencies
+%cargo_vendor_manifest
 
 %install
 install -D -m 0755 target/release/prefixdevname %{buildroot}%{_udevdir}/prefixdevname
@@ -38,6 +42,8 @@ install -D -m 0755 dracut/71prefixdevname-tools/module-setup.sh %{buildroot}%{_p
 
 %files
 %license LICENSE
+%license LICENSE.dependencies
+%license cargo-vendor.txt
 %doc README.md
 %{_udevdir}/prefixdevname
 %{_udevrulesdir}/71-prefixdevname.rules
