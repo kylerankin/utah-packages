@@ -3286,6 +3286,12 @@ packages:
     downstream_package_name: slang
     paths:
       - packages/slang
+  slirp4netns:
+    specfile_path: slirp4netns.spec
+    upstream_package_name: slirp4netns
+    downstream_package_name: slirp4netns
+    paths:
+      - packages/slirp4netns
   smartmontools:
     specfile_path: smartmontools.spec
     upstream_package_name: smartmontools

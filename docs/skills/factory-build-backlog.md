@@ -831,6 +831,25 @@ storage rather than only loading the library: use `kchashmgr create test.kch`,
 `kyotocabinet` binary and link the library subpackage. Record the transaction,
 NEVRAs and command results separately from the recipe closing record.
 
+### slirp4netns recipe review
+
+Rawhide's slirp4netns 1.3.1 recipe at
+`efddb3c622619b516a5b2850dae14d1e52035688` retains Go-template macros
+(`golang_arches_future`, `built_tag_strip`, `import_path`) and an empty
+`devel` subpackage, but upstream's `configure.ac` and `Makefile.am` describe
+one C executable, not a Go library. Use the archive's
+`slirp4netns-<version>` directory, remove the irrelevant template restrictions,
+and build the default target before installation; `generate-man` alone does
+not compile the program. Keep the generated provenance record unchanged and
+explain these local recipe repairs in the spec.
+
+Reuse the existing `libslirp` recipe for `libslirp-devel`; the build graph
+orders this ordinary BuildRequires edge without a hand-assigned stage.
+Upstream's integration suite needs network namespaces and external connectivity.
+Version/help smoke checks in `%check` establish executable startup only, not
+container networking. Hosted namespace tests, a Hummingbird-plus-factory runtime
+transaction, and publication evidence remain separate acceptance requirements.
+
 ### S-Lang library imports
 
 The `slang` source produces the audited `slang` library and a separate

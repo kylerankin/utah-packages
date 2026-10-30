@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 70,
-      "total": 73
+      "pending": 69,
+      "total": 72
     },
     "power": {
       "total": 0
@@ -825,11 +825,6 @@
     },
     {
       "area": "long-tail",
-      "name": "slirp4netns",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "solaar-udev",
       "state": "pending"
     },
@@ -938,11 +933,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 169
+    "pending": 168
   },
   "totals": {
-    "backlog": 177,
-    "resolved": 337,
+    "backlog": 176,
+    "resolved": 338,
     "wontfix": 37
   }
 }
