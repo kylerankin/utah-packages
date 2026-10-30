@@ -80,9 +80,6 @@ consumer_issue = "projectbluefin/utah#389"
 packages = [
     "NetworkManager-vpnc",
     "NetworkManager-vpnc-gnome",
-    "openpace",
-    "opensc",
-    "opensc-libs",
     "python3-yubikey-manager",
     "yubikey-manager",
 ]
@@ -303,6 +300,15 @@ packages = [
     # Recipe import only; build, publication and runtime proof remain on #478.
     { name = "pam-u2f", pr = 776 },
     { name = "pamu2fcfg", pr = 776 },
+    # VPN parity #478: import openpace and opensc. opensc-libs is the opensc
+    # "%package libs" subpackage, so importing opensc resolves it too. Recipe
+    # import only; hosted build, publication and runtime proof remain open on
+    # #478. NetworkManager-vpnc and NetworkManager-vpnc-gnome are deliberately
+    # left pending: Fedora retired the vpnc plugin (privilege-escalation
+    # vulnerabilities) and current NetworkManager Obsoletes/Conflicts them.
+    { name = "openpace", pr = 825 },
+    { name = "opensc", pr = 825 },
+    { name = "opensc-libs", pr = 825 },
     # jaraco-family parity for #489 (partial source-family PR); hosted build,
     # publication and runtime proof remain open until #489 closes.
     { name = "python3-jaraco-context", pr = 808 },

@@ -2638,6 +2638,12 @@ packages:
     downstream_package_name: openjpeg
     paths:
       - packages/openjpeg
+  openpace:
+    specfile_path: openpace.spec
+    upstream_package_name: openpace
+    downstream_package_name: openpace
+    paths:
+      - packages/openpace
   openpgm:
     specfile_path: openpgm.spec
     upstream_package_name: openpgm
@@ -2650,6 +2656,12 @@ packages:
     downstream_package_name: openrgb
     paths:
       - packages/openrgb
+  opensc:
+    specfile_path: opensc.spec
+    upstream_package_name: opensc
+    downstream_package_name: opensc
+    paths:
+      - packages/opensc
   openvpn:
     specfile_path: openvpn.spec
     upstream_package_name: openvpn
