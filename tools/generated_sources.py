@@ -32,6 +32,10 @@ that no upstream publishes verbatim:
   Neither project publishes a release file; Fedora's tarballs are a GitLab
   tag archive and a hand-run `git archive`, whose tar streams this
   reproduces byte for byte (GIT_ARCHIVE_SOURCES)
+- prefixdevname: the upstream GitHub tag archive (SHA-512-pinned) with a
+  `vendor/` tree of every crates.io crate its Cargo.lock pins, laid out as
+  `cargo vendor --versioned-dirs` does. Upstream publishes no release asset,
+  and the recipe builds offline from vendored crates
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
