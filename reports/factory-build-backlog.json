@@ -14,8 +14,8 @@
       "total": 15
     },
     "gnome-apps": {
-      "pending": 3,
-      "total": 3
+      "pending": 1,
+      "total": 1
     },
     "long-tail": {
       "already_recipe": 2,
@@ -509,16 +509,6 @@
       "state": "pending"
     },
     {
-      "area": "gnome-apps",
-      "name": "imath",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "rygel",
-      "state": "pending"
-    },
-    {
       "area": "long-tail",
       "name": "7zip",
       "state": "pending"
@@ -878,11 +868,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 157
+    "pending": 155
   },
   "totals": {
-    "backlog": 165,
-    "resolved": 349,
+    "backlog": 163,
+    "resolved": 351,
     "wontfix": 37
   }
 }
