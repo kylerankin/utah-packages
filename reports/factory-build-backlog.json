@@ -888,11 +888,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 161
+    "pending": 159
   },
   "totals": {
-    "backlog": 169,
-    "resolved": 345,
+    "backlog": 167,
+    "resolved": 347,
     "wontfix": 37
   }
 }
