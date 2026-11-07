@@ -1,0 +1,8 @@
+{
+  "package": "appstream-data",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/appstream-data.git",
+  "commit": "53c83ee485a3fb0fde8b9d37ab2111ed36eb4d4b",
+  "tree": "d5c9d144dfd7c995d04d0a207a09b146c62a71f0",
+  "imported_at": "2026-11-07T00:59:34.188816+00:00"
+}

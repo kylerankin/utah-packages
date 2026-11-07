@@ -1,0 +1,5 @@
+/fedora-[0-9]*-icons.tar.gz
+/fedora-[0-9]*.xml.gz
+/noarch
+/*src.rpm
+/.build*.log
